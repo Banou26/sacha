@@ -1,0 +1,10 @@
+{
+  "name": "sacha",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {},
+  "author": "Banou26",
+  "dependencies": {
+    "anitomyscript": "^2.0.4"
+  }
+}
