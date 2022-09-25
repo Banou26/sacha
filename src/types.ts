@@ -1,4 +1,5 @@
-import { LanguageTag } from '../../scannarr/src/utils/language'
+import type { LanguageTag } from '../../scannarr/src/utils/language'
+import { AUDIO_CODECS, RESOLUTIONS, VIDEO_CODECS, CONTAINERS, NORMALIZED_LANGUAGES } from './common'
 
 // https://en.wikipedia.org/wiki/List_of_hash_functions
 // https://cryptography.fandom.com/wiki/List_of_hash_functions
@@ -10,82 +11,21 @@ export type CHECKSUM_ALGORITHM =
   | 'Adler-32'
   | `BLAKE${`-${256 | 512}` | `2${'s' | 'b' | 'X'}` | 3}`
 
-export const COMMON_RESOLUTIONS = [320, 480, 540, 640, 720, 1080, 1440, 2160, 2880, 4320, 5120, 7680] as const
-export type COMMON_RESOLUTION = typeof COMMON_RESOLUTIONS[number]
+export type COMMON_RESOLUTION = typeof RESOLUTIONS[number]
 export type RESOLUTION_FORMAT = COMMON_RESOLUTION | `${COMMON_RESOLUTION}p` | `${COMMON_RESOLUTION}px`
 export type Resolution = (number & {}) & (RESOLUTION_FORMAT | `${RESOLUTION_FORMAT}x${RESOLUTION_FORMAT}`)
 
-/** https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_codecs */
-export const COMMON_VIDEO_CODECS = [
-  'AV1', 'AVC', 'H.263', 'HEVC', 'MP4V',
-  'MPEG-1', 'MPEG-2', 'Theora', 'VP8', 'VP9',
-  /** https://github.com/erengy/anitomy/blob/master/anitomy/keyword.cpp#L105 */
-  // '8BIT', '8-BIT', '10BIT', '10BITS', '10-BIT', '10-BITS' |
-  // 'HI10', 'HI10P', 'HI444', 'HI444P', 'HI444PP' |
-  'H264', 'H265', 'H.264', 'H.265', 'X264', 'X265', 'X.264',
-  /* 'AVC', 'HEVC', */ 'HEVC2', 'DIVX', 'DIVX5', 'DIVX6', 'XVID'
-] as const
-export type COMMON_VIDEO_CODEC = typeof COMMON_VIDEO_CODECS[number]
+export type COMMON_VIDEO_CODEC = typeof VIDEO_CODECS[number]
 export type VIDEO_CODEC = (string & {}) & COMMON_VIDEO_CODEC
 
-/** https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Audio_codecs */
-export const COMMON_AUDIO_CODECS = [
-  'AAC', 'ALAC', 'AMR', 'FLAC', 'G.711',
-  'G.722', 'MP3', 'When', 'Opus', 'Vorbis',
-  /** https://github.com/erengy/anitomy/blob/master/anitomy/keyword.cpp#L45 */
-  'AAC', 'AACX2', 'AACX3', 'AACX4', 'AC3', 'EAC3', 'E-AC-3',
-  'FLAC', 'FLACX2', 'FLACX3', 'FLACX4', 'LOSSLESS', 'MP3', 'OGG',
-  'VORBIS'
-] as const
-export type COMMON_AUDIO_CODEC = typeof COMMON_AUDIO_CODECS[number]
+
+export type COMMON_AUDIO_CODEC = typeof AUDIO_CODECS[number]
 export type AUDIO_CODEC = (string & {}) & COMMON_AUDIO_CODEC
 
-/** https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers */
-const CONTAINERS = [
-  '3GP', 'ADTS', 'FLAC', 'MPEG',
-  'MPEG-2', 'MP4', 'Ogg', 'MOV',
-   // 'MPEG-4' (MP4)
-  // 'QuickTime' (MOV)
-] as const
+
 export type CONTAINER = typeof CONTAINERS[number]
 
-// https://iso639-3.sil.org/code/${LANG_SHORTHAND}
-// https://iso639-3.sil.org/code_tables/639/read
-export const NORMALIZED_LANGUAGE_MAPPING = {
-  'ENG': LanguageTag.EN,
-  'POR-BR': LanguageTag.PT,
-  'SPA-LA': LanguageTag.ES,
-  'SPA': LanguageTag.ES,
-  'ARA': LanguageTag.AR,
-  'FRE': LanguageTag.FR,
-  'GER': LanguageTag.DE,
-  'ITA': LanguageTag.IT,
-  'JPN': LanguageTag.JA,
-  'POR': LanguageTag.PT,
-  'POL': LanguageTag.PL,
-  'DUT': LanguageTag.NL,
-  'NOB': LanguageTag.NB,
-  'FIN': LanguageTag.FI,
-  'TUR': LanguageTag.TR,
-  'SWE': LanguageTag.SV,
-  'GRE': LanguageTag.EL,
-  'HEB': LanguageTag.HE,
-  'RUM': LanguageTag.RM,
-  'IND': LanguageTag.ID,
-  'THA': LanguageTag.TH,
-  'KOR': LanguageTag.KO,
-  'DAN': LanguageTag.DA,
-  'CHI': LanguageTag.ZH,
-  'VIE': LanguageTag.VI,
-  'UKR': LanguageTag.UK,
-  'HUN': LanguageTag.HU,
-  'CES': LanguageTag.CS,
-  'HRV': LanguageTag.HR,
-  'MAY': LanguageTag.MS,
-  'FIL': LanguageTag.FIL,
-  'RUS': LanguageTag.RU
-} as const
-export type LANGUAGE_SHORTHAND = (string & {}) & keyof typeof NORMALIZED_LANGUAGE_MAPPING
+export type LANGUAGE_SHORTHAND = (string & {}) & keyof typeof NORMALIZED_LANGUAGES
 
 export type MediaBase = {
   group?: string

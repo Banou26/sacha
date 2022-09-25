@@ -2,10 +2,10 @@ import {
   str, sequenceOf, choice, char, many, many1,
   everyCharUntil, anythingExcept, endOfInput,
   anyChar, letters, between, anyCharExcept,
-  namedSequenceOf, digits, withData, getData, 
+  namedSequenceOf, digits, withData, getData, whitespace, digit, 
 } from 'arcsecond'
-import { COMMON_AUDIO_CODECS, COMMON_RESOLUTIONS, COMMON_VIDEO_CODECS, NORMALIZED_LANGUAGE_MAPPING } from './types'
-import { istr, ichar } from './utils'
+import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS } from './common'
+import { istr, ichar, nonOptionalWhitespace } from './utils'
 
 /** https://github.com/erengy/anitomy/blob/master/anitomy/tokenizer.cpp#L46 */
 const metadataDelimiters = {
@@ -30,7 +30,7 @@ const subtitleTermToken = choice (
     .map(istr)
 )
 
-const resolutionNumberToken = choice (COMMON_RESOLUTIONS.map(res => str(res.toString())))
+const resolutionNumberToken = choice (RESOLUTIONS.map(res => str(res.toString())))
 
 const resolutionTokenPrimitive =
   choice ([
@@ -57,30 +57,81 @@ const resolutionToken =
 
 const videoCodecToken =
   choice (
-    COMMON_VIDEO_CODECS
+    VIDEO_CODECS
+      .map(str)
+  )
+
+const videoTermToken =
+  choice (
+    VIDEO_TERMS
       .map(str)
   )
 
 const audioCodecToken =
   choice (
-    COMMON_AUDIO_CODECS
+    AUDIO_CODECS
+      .map(str)
+  )
+
+const audioTermToken =
+  choice (
+    AUDIO_TERMS
       .map(str)
   )
 
 const languageToken =
   choice (
     Object
-      .keys(NORMALIZED_LANGUAGE_MAPPING)
+      .keys(NORMALIZED_LANGUAGES)
       .map(str)
   )
+
+const yearToken = sequenceOf([
+  digit,
+  digit,
+  digit,
+  digit
+])
+
+const datePartToken = sequenceOf([
+  digit,
+  digit
+])
+
+const dateToken = choice([
+  sequenceOf([
+    yearToken,
+    char('.'),
+    datePartToken,
+    char('.'),
+    datePartToken
+  ]),
+  sequenceOf([
+    datePartToken,
+    char('.'),
+    datePartToken,
+    char('.'),
+    yearToken
+  ]),
+  yearToken
+])
 
 const metadataTokenValue = (delimiter: Delimiter) =>
   choice ([
     namedSequenceOf ([
+      ['date', dateToken]
+    ]),
+    namedSequenceOf ([
       ['audioCodec', audioCodecToken]
     ]),
     namedSequenceOf ([
+      ['audioTerm', audioTermToken]
+    ]),
+    namedSequenceOf ([
       ['videoCodec', videoCodecToken]
+    ]),
+    namedSequenceOf ([
+      ['videoTerm', videoTermToken]
     ]),
     namedSequenceOf ([
       ['resolution', resolutionToken]
@@ -91,25 +142,27 @@ const metadataTokenValue = (delimiter: Delimiter) =>
     namedSequenceOf ([
       ['subtitleTerm', subtitleTermToken]
     ]),
-    everyCharUntil (char (getCorrespondingDelimiter(delimiter)))
+    whitespace,
+    anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
   ])
 
 const makeMetadataToken = (delimiter: Delimiter) =>
   sequenceOf ([
     char (delimiter),
-    metadataTokenValue (delimiter),
-    // choice([
-    //   many (metadataTokenValue (delimiter)),
-    //   everyCharUntil (char (getCorrespondingDelimiter(delimiter)))
-    // ]),
-    // many (metadataTokenValue (delimiter)),
-    // everyCharUntil (char (getCorrespondingDelimiter(delimiter))),
+    many (metadataTokenValue (delimiter)),
     char (getCorrespondingDelimiter(delimiter))
   ])
 
 const metadataToken = choice (delimitersArray.map(makeMetadataToken))
 
-// console.log(metadataToken.run('(ENG HEVC 1080p)'))
+console.log(
+  JSON.stringify(
+    // @ts-ignore
+    metadataToken.run('(ENG FOO HEVC 1080p)').result,
+    undefined,
+    2
+  )
+)
 
 const token = choice ([
   metadataToken,
@@ -118,14 +171,12 @@ const token = choice ([
 
 const parse = many1 (token)
 
-// console.log(parse.run('(foo) bar [baz]'))
-// console.log(parse.run('(foo) bar'))
 console.log(
   // @ts-ignore
   // parse.run('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
   JSON.stringify(
     // @ts-ignore
-    parse.run('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]').result,
+    parse.run('[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]').result,
     undefined,
     2
   )
