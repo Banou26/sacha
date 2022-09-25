@@ -2,9 +2,20 @@
   "name": "sacha",
   "version": "0.0.1",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "node -r ts-node/register bin/test.ts",
+    "dev": "nodemon -e * --watch \"src/**/*\" --exec \"node -r ts-node/register src/index.ts\""
+  },
   "author": "Banou26",
   "dependencies": {
-    "anitomyscript": "^2.0.4"
+    "anitomyscript": "^2.0.4",
+    "arcsecond": "^5.0.0"
+  },
+  "devDependencies": {
+    "@japa/expect": "^2.0.1",
+    "@japa/runner": "^2.2.1",
+    "@japa/spec-reporter": "^1.3.1",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1"
   }
 }

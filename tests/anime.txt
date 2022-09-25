@@ -284,3 +284,138 @@ Ni Zhenshi Ge Tiancai - 15 - 1080p WEB H.264 -NanDesuKa (B-Global).mkv
 [SubsPlease] Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e S2 - 03 (480p) [69C66F09].mkv
 [Erai-raws] Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e S2 - 02 [1080p][HEVC][Multiple Subtitle][4526CFBD].mkv
 [Erai-raws] Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e S2 - 02 [480p][Multiple Subtitle][5F5B5979].mkv
+
+Initial D - Third Stage (High Quality) MKV [1080p] Blu-Ray Rip (Stabilized V2)
+The Tatami Time Machine Blues - S01E02 - 1080p WEB H.264 -NanDesuKa (DSNP).mkv (Yojouhan Time Machine Blues)
+
+
+// Release group: TaigaSubs
+// Anime title: Toradora!
+// Anime year: 2008
+// Episode number: 01
+// Release version: 2
+// Episode title: Tiger and Dragon
+// Video resolution: 1280x720
+// Video term: H.264
+// Audio term: FLAC
+// File checksum: 1234ABCD
+
+// {
+//   "anime_season": undefined,
+//   "season_prefix": undefined,
+//   "anime_title": "Cyberpunk - Edgerunners",
+//   "anime_type": undefined,
+//   "anime_year": undefined,
+//   "audio_term": undefined,
+//   "device_compatibility": undefined,
+//   "episode_number": [
+//       "01",
+//       "10"
+//   ],
+//   "episode_prefix": undefined,
+//   "episode_title": undefined,
+//   "file_checksum": undefined,
+//   "file_extension": undefined,
+//   "file_name": "[Erai-raws] Cyberpunk - Edgerunners - 01~10 [1080p][Multiple Subtitle] [ENG][POR-BR][SPA-LA][SPA][ARA][FRE][GER][ITA][JPN][POR][POL][DUT][NOB][FIN][TUR][SWE][GRE][HEB][RUM][IND][THA][KOR][DAN][CHI][VIE][UKR][HUN][CES][HRV][MAY][FIL]",
+//   "language": [
+//       "ENG",
+//       "ITA"
+//   ],
+//   "other": undefined,
+//   "release_group": "Erai-raws",
+//   "release_information": undefined,
+//   "release_version": undefined,
+//   "source": undefined,
+//   "subtitles": undefined,
+//   "video_resolution": "1080p",
+//   "video_term": undefined,
+//   "volume_number": undefined,
+//   "volume_prefix": undefined,
+//   "unknown": undefined
+// }
+
+
+// {
+//   "anime_season": null,
+//   "season_prefix": null,
+//   "anime_title": "Cyberpunk Edgerunners",
+//   "anime_type": null,
+//   "anime_year": null,
+//   "audio_term": "E-AC-3",
+//   "device_compatibility": null,
+//   "episode_number": null,
+//   "episode_prefix": null,
+//   "episode_title": null,
+//   "file_checksum": null,
+//   "file_extension": null,
+//   "file_name": "[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]",
+//   "language": null,
+//   "other": null,
+//   "release_group": "silly",
+//   "release_information": null,
+//   "release_version": null,
+//   "source": null,
+//   "subtitles": null,
+//   "video_resolution": "1080p",
+//   "video_term": "HEVC",
+//   "volume_number": null,
+//   "volume_prefix": null,
+//   "unknown": null
+// }
+
+// {
+//   "anime_season": "01",
+//   "season_prefix": null,
+//   "anime_title": "The Tatami Time Machine Blues",
+//   "anime_type": null,
+//   "anime_year": null,
+//   "audio_term": null,
+//   "device_compatibility": null,
+//   "episode_number": "02",
+//   "episode_prefix": null,
+//   "episode_title": "WEB",
+//   "file_checksum": null,
+//   "file_extension": null,
+//   "file_name": "The Tatami Time Machine Blues - S01E02 - 1080p WEB H.264 -NanDesuKa (DSNP).mkv (Yojouhan Time Machine Blues)",
+//   "language": null,
+//   "other": null,
+//   "release_group": "DSNP",
+//   "release_information": null,
+//   "release_version": null,
+//   "source": null,
+//   "subtitles": null,
+//   "video_resolution": "1080p",
+//   "video_term": "H.264",
+//   "volume_number": null,
+//   "volume_prefix": null,
+//   "unknown": null
+// }
+
+
+{
+  "anime_season": null,
+  "season_prefix": null,
+  "anime_title": "Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer",
+  "anime_type": null,
+  "anime_year": null,
+  "audio_term": null,
+  "device_compatibility": null,
+  "episode_number": null,
+  "episode_prefix": null,
+  "episode_title": null,
+  "file_checksum": null,
+  "file_extension": null,
+  "file_name": "[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]",
+  "language": "ENG",
+  "other": null,
+  "release_group": "Erai-raws",
+  "release_information": null,
+  "release_version": null,
+  "source": null,
+  "subtitles": null,
+  "video_resolution": "1080p",
+  "video_term": "HEVC",
+  "volume_number": null,
+  "volume_prefix": null,
+  "unknown": null
+}
