@@ -2,10 +2,34 @@ import {
   str, sequenceOf, choice, char, many, many1,
   everyCharUntil, anythingExcept, endOfInput,
   anyChar, letters, between, anyCharExcept,
-  namedSequenceOf, digits, withData, getData, whitespace, digit, 
+  namedSequenceOf, digits, withData, getData, whitespace, digit, mapTo, pipeParsers, 
 } from 'arcsecond'
-import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS } from './common'
+import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS } from './common'
 import { istr, ichar, nonOptionalWhitespace } from './utils'
+
+type RegroupStringPrimitive = string | { [key: string]: any }
+type RegroupStringPart<S extends RegroupStringPrimitive> = S | S[]
+export type RegroupString = RegroupStringPart<RegroupStringPart<RegroupStringPrimitive>>
+
+const regroupStrings = <T extends RegroupString>(tokens: T[]): T[] =>
+  tokens
+    .reduce<T[]>((acc, token) => {
+      if (!acc.length) return [...acc, token]
+      const rest = acc.slice(0, -1)
+      const previousToken = acc.at(-1)
+      return [
+        ...rest,
+        ...(
+          Array.isArray(token)
+            ? [previousToken, regroupStrings(token)]
+            : (
+              typeof previousToken === 'object' || typeof token === 'object'
+                ? [previousToken, token]
+                : [`${previousToken ?? ''}${token}`]
+            )
+        )
+      ] as T[]
+    }, [])
 
 /** https://github.com/erengy/anitomy/blob/master/anitomy/tokenizer.cpp#L46 */
 const metadataDelimiters = {
@@ -67,6 +91,13 @@ const videoTermToken =
       .map(str)
   )
 
+  // (TYPE_TERMS as Mutable<typeof TYPE_TERMS>)
+const typeTermToken =
+  choice (
+    TYPE_TERMS
+      .map(str)
+  )
+
 const audioCodecToken =
   choice (
     AUDIO_CODECS
@@ -116,10 +147,20 @@ const dateToken = choice([
   yearToken
 ])
 
+type tokenNames =
+  'date'
+  | 'audioCodec'
+  | 'audioTerm'
+  | 'videoCodec'
+  | 'videoTerm'
+  | 'resolution'
+  | 'language'
+  | 'subtitleTerm'
+
 const metadataTokenValue = (delimiter: Delimiter) =>
   choice ([
     namedSequenceOf ([
-      ['date', dateToken]
+      ['typeTerm', typeTermToken]
     ]),
     namedSequenceOf ([
       ['audioCodec', audioCodecToken]
@@ -142,44 +183,95 @@ const metadataTokenValue = (delimiter: Delimiter) =>
     namedSequenceOf ([
       ['subtitleTerm', subtitleTermToken]
     ]),
+    // needs to be furthest down as it can override other tokens like resolutions
+    namedSequenceOf ([
+      ['date', dateToken]
+    ]),
     whitespace,
     anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
   ])
 
+
 const makeMetadataToken = (delimiter: Delimiter) =>
-  sequenceOf ([
-    char (delimiter),
-    many (metadataTokenValue (delimiter)),
-    char (getCorrespondingDelimiter(delimiter))
+  pipeParsers([
+    sequenceOf ([
+      char (delimiter),
+      many (metadataTokenValue (delimiter)),
+      char (getCorrespondingDelimiter(delimiter))
+    ]),
+    mapTo(result => ({
+      type: 'METADATA',
+      delimiter,
+      result: regroupStrings(result).slice(1, -1).flat()
+    }))
   ])
+
 
 const metadataToken = choice (delimitersArray.map(makeMetadataToken))
 
-console.log(
-  JSON.stringify(
-    // @ts-ignore
-    metadataToken.run('(ENG FOO HEVC 1080p)').result,
-    undefined,
-    2
-  )
-)
+
+// console.log(
+//   JSON.stringify(
+//     // @ts-ignore
+//     metadataToken.run('(ENG FOO HEVC 1080p)').result,
+//     undefined,
+//     2
+//   )
+// )
+
+const nonMetadataToken =
+  pipeParsers([
+    everyCharUntil ( choice ([metadataToken, endOfInput])),
+    mapTo(result => ({
+      type: 'DATA',
+      result
+    }))
+  ])
 
 const token = choice ([
   metadataToken,
-  everyCharUntil ( choice ([metadataToken, endOfInput]))
+  nonMetadataToken
 ])
 
-const parse = many1 (token)
+const parser = many1 (token)
 
-console.log(
-  // @ts-ignore
-  // parse.run('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
-  JSON.stringify(
-    // @ts-ignore
-    parse.run('[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]').result,
-    undefined,
-    2
-  )
-)
+// const getNamedTokens =
+//   (str: tokenNames) =>
+//     (token: ({ [key: tokenNames]: string }[]) => {}
+
+
+
 // [silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]
 // console.log(parse.run('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]'))
+
+export const parse = (str: string) => {
+  const result = parser.run(str)
+  if (result.isError) throw new Error('Parser errored')
+
+  console.log(
+    JSON.stringify(
+      result.result,
+      undefined,
+      2
+    )
+  )
+
+  const videoCodec =
+    result
+    .result
+    // .map(token =>
+    //   typeof token === 'string' ? 
+    // )
+
+  const res = {
+    videoCodec
+  }
+
+  console.log(res)
+  return res
+}
+
+export default parse
+
+parse('[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]')
+// parse('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
