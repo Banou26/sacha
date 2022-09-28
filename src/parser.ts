@@ -2,7 +2,7 @@ import {
   str, sequenceOf, choice, char, many, many1,
   everyCharUntil, anythingExcept, endOfInput,
   anyChar, letters, between, anyCharExcept,
-  namedSequenceOf, digits, withData, getData, whitespace, digit, mapTo, pipeParsers, 
+  namedSequenceOf, digits, withData, getData, whitespace, digit, mapTo, pipeParsers, Err, 
 } from 'arcsecond'
 import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS } from './common'
 import { istr, ichar, nonOptionalWhitespace } from './utils'
@@ -200,14 +200,14 @@ const makeMetadataToken = (delimiter: Delimiter) =>
       char (getCorrespondingDelimiter(delimiter))
     ]),
     mapTo(result => ({
-      type: 'METADATA',
+      type: 'METADATA' as const,
       delimiter,
       result: regroupStrings(result).slice(1, -1).flat()
     }))
   ])
 
 
-const metadataToken = choice (delimitersArray.map(makeMetadataToken))
+const metadataToken: ReturnType<typeof makeMetadataToken> = choice (delimitersArray.map(makeMetadataToken))
 
 
 // console.log(
@@ -223,8 +223,8 @@ const nonMetadataToken =
   pipeParsers([
     everyCharUntil ( choice ([metadataToken, endOfInput])),
     mapTo(result => ({
-      type: 'DATA',
-      result
+      type: 'DATA' as const,
+      result: result as string
     }))
   ])
 
@@ -233,7 +233,29 @@ const token = choice ([
   nonMetadataToken
 ])
 
-const parser = many1 (token)
+type TokenType = Exclude<ReturnType<typeof token['run']>, Err<string, any>>['result']
+
+const parser =
+  pipeParsers([
+    many1 (token),
+    mapTo((result: TokenType[]) => {
+      const [_firstToken, ...restTokens] = result
+      const firstToken =
+        (_firstToken.type === 'METADATA'
+        && _firstToken.result.length === 1
+        && typeof _firstToken.result[0] === 'string')
+          ? { ..._firstToken, result: [{ group: _firstToken.result[0] }] }
+          : _firstToken
+      return ({
+        // metadata: result.metadata,
+        result: [
+          firstToken,
+          ...restTokens
+        ]
+      })
+    })
+  ])
+
 
 // const getNamedTokens =
 //   (str: tokenNames) =>
