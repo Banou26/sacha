@@ -4,6 +4,7 @@ import {
   anyChar, letters, between, anyCharExcept,
   namedSequenceOf, digits, withData, getData, whitespace, digit, mapTo, pipeParsers, Err, Ok, Parser, 
 } from 'arcsecond'
+import { filter } from 'fp-ts/lib/Array'
 import { pipe } from 'fp-ts/lib/function'
 import { NonEmptyArray, groupBy, map } from 'fp-ts/lib/NonEmptyArray'
 import { toEntries } from 'fp-ts/lib/Record'
@@ -194,10 +195,10 @@ const makeMetadataToken = <T extends Delimiter>(delimiter: T) =>
     many (metadataTokenValue (delimiter)),
     char (getCorrespondingDelimiter(delimiter)) as Parser<CorrespondDelimiter<Delimiter>>
   ]).map((result) => ({
-    type: 'METADATA',
+    type: 'METADATA' as const,
     delimiter,
     result: regroupStrings(result).slice(1, -1).flat()
-  }) as const)
+  }))
 
   // : [T, ExtractParserResult<ReturnType<typeof metadataTokenValue>>, CorrespondDelimiter<T>]
 
@@ -251,24 +252,21 @@ const parser =
 
       console.log('tokens', tokens)
 
-      type foo = Extract<typeof tokens[number], { type: 'METADATA' }>[][number]['result']
-
-      const metadataTokens = 
-        tokens
-          .filter(({ type }) => type === 'METADATA') as Extract<typeof tokens[number], { type: 'METADATA' }>[]
-
-      // console.log('tokens', tokens)
+      const metadataTokens =
+        pipe(
+          tokens,
+          filter(token => token.type === 'METADATA')
+        )
 
       const parsedMetadata =
         metadataTokens
-          // @ts-ignore
-          .flatMap(({ result }) => result)
+          .map(({ result }) => result)
+          .flat()
           .filter(result =>
             result
             && typeof result === 'object'
             && !Array.isArray(result)
           )
-        
 
       console.log('parsedMetadata', parsedMetadata)
 
