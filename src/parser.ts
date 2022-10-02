@@ -4,12 +4,20 @@ import {
   anyChar, letters, between, anyCharExcept,
   namedSequenceOf, digits, withData, getData, whitespace, digit, mapTo, pipeParsers, Err, Ok, Parser, 
 } from 'arcsecond'
-import { filter } from 'fp-ts/lib/Array'
-import { pipe } from 'fp-ts/lib/function'
-import { NonEmptyArray, groupBy, map } from 'fp-ts/lib/NonEmptyArray'
-import { toEntries } from 'fp-ts/lib/Record'
 import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS } from './common'
 import { istr, ichar, nonOptionalWhitespace } from './utils'
+
+import { Semigroup } from 'fp-ts/lib/string'
+import { contramap } from 'fp-ts/lib/Eq'
+import { array, Foldable, every, flatten } from 'fp-ts/lib/Array'
+import { last } from 'fp-ts/lib/Semigroup'
+import * as RA from 'fp-ts/lib/ReadonlyArray'
+import { NonEmptyArray, groupBy } from 'fp-ts/lib/NonEmptyArray'
+import { map } from 'fp-ts/lib/Array'
+import { fromEntries, toEntries } from 'fp-ts/lib/Record'
+import { filter } from 'fp-ts/lib/Array'
+import { identity, pipe } from 'fp-ts/lib/function'
+import { fromFoldableMap, ReadonlyRecord } from 'fp-ts/lib/ReadonlyRecord'
 
 type RegroupStringPrimitive = string | number | { [key: string]: any }
 type RegroupStringPart<S extends RegroupStringPrimitive> = S | S[]
@@ -174,16 +182,16 @@ type tokenNames =
 
 const metadataTokenValue = (delimiter: Delimiter) =>
   choice ([
-    typeTermToken.map(res => ({ typeTerm: res })),
-    audioCodecToken.map(res => ({ audioCodec: res })),
-    audioTermToken.map(res => ({ audioTerm: res })),
-    videoCodecToken.map(res => ({ videoCodec: res })),
-    videoTermToken.map(res => ({ videoTerm: res })),
-    resolutionToken.map(res => ({ resolution: res })),
-    languageToken.map(res => ({ language: res })),
-    subtitleTermToken.map(res => ({ subtitleTerm: res })),
+    typeTermToken.map(res => ({ type: 'typeTerm' as const, value: res })),
+    audioCodecToken.map(res => ({ type: 'audioCodec' as const, value: res })),
+    audioTermToken.map(res => ({ type: 'audioTerm' as const, value: res })),
+    videoCodecToken.map(res => ({ type: 'videoCodec' as const, value: res })),
+    videoTermToken.map(res => ({ type: 'videoTerm' as const, value: res })),
+    resolutionToken.map(res => ({ type: 'resolution' as const, value: res })),
+    languageToken.map(res => ({ type: 'language' as const, value: res })),
+    subtitleTermToken.map(res => ({ type: 'subtitleTerm' as const, value: res })),
     // needs to be furthest down as it can override other tokens like resolutions
-    dateToken.map(res => ({ date: res })),
+    dateToken.map(res => ({ type: 'date' as const, value: res })),
     whitespace,
     anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
   ])
@@ -197,7 +205,7 @@ const makeMetadataToken = <T extends Delimiter>(delimiter: T) =>
   ]).map((result) => ({
     type: 'METADATA' as const,
     delimiter,
-    result: regroupStrings(result).slice(1, -1).flat()
+    value: regroupStrings(result).slice(1, -1).flat()
   }))
 
   // : [T, ExtractParserResult<ReturnType<typeof metadataTokenValue>>, CorrespondDelimiter<T>]
@@ -226,7 +234,7 @@ const nonMetadataToken =
   everyCharUntil ( choice ([metadataToken, endOfInput]))
     .map(result => ({
       type: 'DATA' as const,
-      result: result as string
+      value: result as string
     }))
 
 const token = choice ([
@@ -234,23 +242,34 @@ const token = choice ([
   nonMetadataToken
 ])
 
-type Token = ExtractParserResult<typeof token>
+type RootToken = ExtractParserResult<typeof token>
+type MetadataToken = Exclude<Extract<RootToken, { type: 'METADATA' }>['value'][number], string | number>
 
+type Token = RootToken | MetadataToken
+
+type TokenResult = {
+  type: string
+  value: any
+}
+
+type GroupBy<T extends TokenResult[]> = {
+  [K in T[number]['type']]:
+    Extract<T[number], { type: K }>['value']
+    | Extract<T[number], { type: K }>['value'][]
+}
 
 const parser =
   many1 (token)
-    .map((result) => {
-      const [_firstToken, ...restTokens] = result
+    .map((_tokens) => {
+      const [_firstToken, ...restTokens] = _tokens
       const firstToken =
         (_firstToken.type === 'METADATA'
-        && _firstToken.result.length === 1
-        && typeof _firstToken.result[0] === 'string')
-          ? { ..._firstToken, result: [{ group: _firstToken.result[0] }] }
+        && _firstToken.value.length === 1
+        && typeof _firstToken.value[0] === 'string')
+          ? { ..._firstToken, value: [{ type: 'group' as const, value: _firstToken.value[0] }] }
           : _firstToken
 
       const tokens = [firstToken, ...restTokens]
-
-      console.log('tokens', tokens)
 
       const metadataTokens =
         pipe(
@@ -258,25 +277,47 @@ const parser =
           filter(token => token.type === 'METADATA')
         )
 
-      const parsedMetadata =
+      const parsedMetadata = pipe(
         metadataTokens
-          .map(({ result }) => result)
-          .flat()
-          .filter(result =>
-            result
-            && typeof result === 'object'
-            && !Array.isArray(result)
-          )
+        .map(({ value }) => value)
+        .flat()
+        .filter(value =>
+          value
+          && typeof value === 'object'
+          && !Array.isArray(value),
+        ),
+        filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object')
+      )
 
       console.log('parsedMetadata', parsedMetadata)
 
+      // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
+      const groupedResults = pipe(
+        parsedMetadata,
+        groupBy((token) => token.type),
+        toEntries,
+        map(([key, val]) => [key, val.map(token => token.value)]),
+        // @ts-ignore
+        fromEntries
+      ) as unknown as GroupBy<typeof parsedMetadata>
+      console.log('groupedResults', groupedResults)
 
       // const metadataEntries =
       //   pipe(
       //     parsedMetadata,
-      //     groupBy(token => Object.keys(token)[0]),
-      //     toEntries,
-      // ) as unknown as NonEmptyArray<[string, Extract<TokenType['result'], object>]>
+      //     filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object'),
+      //     val => {
+      //       const result = groupBy((token: typeof val[number]) => token.type)(val)
+
+      //       return result as Record<typeof val[number]['type'], typeof val[number]>
+      //     },
+      //     // groupBy(token => Object.keys(token)[0]),
+      //     value => toEntries(value) as Entries<typeof value>,
+      //     map(([key, group]) => [key, group.map(token => token[key])]),
+      //     // fromEntries
+      // ) // as unknown as NonEmptyArray<[string, Extract<TokenType['result'], object>]>
+
+      // console.log('metadataEntries', metadataEntries)
 
       // const metadata = pipe(
       //   metadataEntries,
