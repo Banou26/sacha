@@ -1,23 +1,17 @@
 import {
   str, sequenceOf, choice, char, many, many1,
-  everyCharUntil, anythingExcept, endOfInput,
-  anyChar, letters, between, anyCharExcept,
-  namedSequenceOf, digits, withData, getData, whitespace, digit, mapTo, pipeParsers, Err, Ok, Parser, 
+  everyCharUntil, endOfInput, anyCharExcept,
+  whitespace, digit, Ok, Parser, 
 } from 'arcsecond'
 import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS } from './common'
-import { istr, ichar, nonOptionalWhitespace } from './utils'
+import { istr, ichar } from './utils'
 
-import { Semigroup } from 'fp-ts/lib/string'
-import { contramap } from 'fp-ts/lib/Eq'
-import { array, Foldable, every, flatten } from 'fp-ts/lib/Array'
-import { last } from 'fp-ts/lib/Semigroup'
-import * as RA from 'fp-ts/lib/ReadonlyArray'
-import { NonEmptyArray, groupBy } from 'fp-ts/lib/NonEmptyArray'
+import { groupBy } from 'fp-ts/lib/NonEmptyArray'
 import { map } from 'fp-ts/lib/Array'
 import { fromEntries, toEntries } from 'fp-ts/lib/Record'
 import { filter } from 'fp-ts/lib/Array'
-import { identity, pipe } from 'fp-ts/lib/function'
-import { fromFoldableMap, ReadonlyRecord } from 'fp-ts/lib/ReadonlyRecord'
+import { pipe } from 'fp-ts/lib/function'
+import { Resolution } from './types'
 
 type RegroupStringPrimitive = string | number | { [key: string]: any }
 type RegroupStringPart<S extends RegroupStringPrimitive> = S | S[]
@@ -28,7 +22,7 @@ const regroupStrings = <T extends RegroupString>(tokens: T[]): T[] =>
     .reduce<T[]>((acc, token) => {
       if (!acc.length) return [...acc, token]
       const rest = acc.slice(0, -1)
-      const previousToken = acc.at(-1)
+      const previousToken: any = acc.at(-1)
       return [
         ...rest,
         ...(
@@ -143,13 +137,6 @@ const datePartToken = sequenceOf([
   digit
 ])
 
-const test = choice([
-  yearToken,
-  datePartToken
-])
-
-const res = test.run('10')
-
 type ExtractParserResult<T extends Parser<any>> = Extract<ReturnType<T['run']>, Ok<any, any>>['result']
 
 const dateToken = choice([
@@ -169,16 +156,6 @@ const dateToken = choice([
   ]),
   yearToken
 ])
-
-type tokenNames =
-  'date'
-  | 'audioCodec'
-  | 'audioTerm'
-  | 'videoCodec'
-  | 'videoTerm'
-  | 'resolution'
-  | 'language'
-  | 'subtitleTerm'
 
 const metadataTokenValue = (delimiter: Delimiter) =>
   choice ([
@@ -208,27 +185,11 @@ const makeMetadataToken = <T extends Delimiter>(delimiter: T) =>
     value: regroupStrings(result).slice(1, -1).flat()
   }))
 
-  // : [T, ExtractParserResult<ReturnType<typeof metadataTokenValue>>, CorrespondDelimiter<T>]
-
-
 const metadataToken =
   choice (
     delimitersArray
       .map(makeMetadataToken)
   ) as Parser<ExtractParserResult<ReturnType<typeof makeMetadataToken>>>
-
-// const metadataToken: ReturnType<typeof makeMetadataToken> =
-//   choice (delimitersArray.map(makeMetadataToken))
-
-
-// console.log(
-//   JSON.stringify(
-//     // @ts-ignore
-//     metadataToken.run('(ENG FOO HEVC 1080p)').result,
-//     undefined,
-//     2
-//   )
-// )
 
 const nonMetadataToken =
   everyCharUntil ( choice ([metadataToken, endOfInput]))
@@ -242,10 +203,9 @@ const token = choice ([
   nonMetadataToken
 ])
 
-type RootToken = ExtractParserResult<typeof token>
-type MetadataToken = Exclude<Extract<RootToken, { type: 'METADATA' }>['value'][number], string | number>
-
-type Token = RootToken | MetadataToken
+export type RootToken = ExtractParserResult<typeof token>
+export type MetadataToken = Exclude<Extract<RootToken, { type: 'METADATA' }>['value'][number], string | number>
+export type Token = RootToken | MetadataToken
 
 type TokenResult = {
   type: string
@@ -254,8 +214,7 @@ type TokenResult = {
 
 type GroupBy<T extends TokenResult[]> = {
   [K in T[number]['type']]:
-    Extract<T[number], { type: K }>['value']
-    | Extract<T[number], { type: K }>['value'][]
+    Extract<T[number], { type: K }>['value'][]
 }
 
 const parser =
@@ -289,8 +248,6 @@ const parser =
         filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object')
       )
 
-      console.log('parsedMetadata', parsedMetadata)
-
       // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
       const groupedResults = pipe(
         parsedMetadata,
@@ -300,76 +257,36 @@ const parser =
         // @ts-ignore
         fromEntries
       ) as unknown as GroupBy<typeof parsedMetadata>
-      console.log('groupedResults', groupedResults)
 
-      // const metadataEntries =
-      //   pipe(
-      //     parsedMetadata,
-      //     filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object'),
-      //     val => {
-      //       const result = groupBy((token: typeof val[number]) => token.type)(val)
-
-      //       return result as Record<typeof val[number]['type'], typeof val[number]>
-      //     },
-      //     // groupBy(token => Object.keys(token)[0]),
-      //     value => toEntries(value) as Entries<typeof value>,
-      //     map(([key, group]) => [key, group.map(token => token[key])]),
-      //     // fromEntries
-      // ) // as unknown as NonEmptyArray<[string, Extract<TokenType['result'], object>]>
-
-      // console.log('metadataEntries', metadataEntries)
-
-      // const metadata = pipe(
-      //   metadataEntries,
-      //   map(([key, group]) => group.map(token => token[key]))
-      // )
-
-      // console.log('metadata', metadata)
-      
-      return ({
-        // metadata,
-        result: tokens
-      })
+      return groupedResults
     })
 
-
-// const getNamedTokens =
-//   (str: tokenNames) =>
-//     (token: ({ [key: tokenNames]: string }[]) => {}
-
-
-
-// [silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]
-// console.log(parse.run('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]'))
-
 export const parse = (str: string) => {
-  const result = parser.run(str)
-  if (result.isError) throw new Error('Parser errored')
+  const _result = parser.run(str)
+  if (_result.isError) throw new Error('Parser errored')
+  return _result.result
+}
 
-  // console.log(
-  //   JSON.stringify(
-  //     result.result,
-  //     undefined,
-  //     2
-  //   )
-  // )
+export const format = <T extends ReturnType<typeof parse>>(result: T) => {
+  const group = result.group?.at(0)
+  const resolution =
+    Number(
+      Array.isArray(result.resolution?.at(0))
+        ? result.resolution.at(0)?.at(0)
+        : result.resolution?.at(0)
+    ) as Resolution
 
-  const videoCodec =
-    result
-    .result
-    // .map(token =>
-    //   typeof token === 'string' ? 
-    // )
-
-  const res = {
-    videoCodec
+  return {
+    ...result,
+    group,
+    resolution
   }
-
-  // console.log(res)
-  return res
 }
 
 export default parse
 
-parse('[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]')
-// parse('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
+const res = parse('[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]')
+const res2 = parse('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
+
+console.log(format(res))
+console.log(format(res2))
