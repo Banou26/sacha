@@ -1,3 +1,9 @@
+import { pipe } from 'fp-ts/lib/function'
+import { toUndefined } from 'fp-ts/lib/Option'
+import * as A from 'fp-ts/lib/ReadonlyArray'
+import * as REA from 'fp-ts/lib/ReadonlyNonEmptyArray'
+import * as RR from 'fp-ts/lib/ReadonlyRecord'
+import * as O from 'fp-ts/lib/Option'
 import { LanguageTag } from '../../scannarr/src/utils/language'
 
 // needed as small tokens might override more specific tokens
@@ -16,6 +22,68 @@ export const VIDEO_CODECS = sortTermLength([
   'H264', 'H265', 'H.264', 'H.265', 'X264', 'X265', 'X.264',
   /* 'AVC', 'HEVC', */ 'HEVC2', 'DIVX', 'DIVX5', 'DIVX6', 'XVID'
 ] as const)
+
+const makeH2XX = <T extends number>(num: T) => [
+  `H26${num}`,
+  `H.26${num}`,
+  `X26${num}`,
+  `X.26${num}`
+] as const
+
+export const NORMALIZED_VIDEO_CODECS = {
+  'AV1': ['AV1'],
+  'H261': makeH2XX(1),
+  'H262': makeH2XX(2),
+  'H263': makeH2XX(3),
+  'H264': ['AVC', ...makeH2XX(4)],
+  'H265': ['HEVC', ...makeH2XX(5)],
+  'VP8': ['VP8'],
+  'VP9': ['VP9']
+} as const
+
+type VideoCodec = typeof NORMALIZED_VIDEO_CODECS[keyof typeof NORMALIZED_VIDEO_CODECS][number]
+
+// const mappedVideoCodecs = pipe(
+//   NORMALIZED_VIDEO_CODECS,
+//   RR.toEntries,
+//   A.map(([key, val]) => pipe(
+//     val,
+//     REA.map<typeof val[number], [typeof val[number], typeof key]>((codec) => [codec, key])
+//   )),
+//   A.flatten,
+//   RR.fromEntries
+// )
+
+// const res = mappedVideoCodecs['AV1']
+
+// const mappedVideoCodecs =
+//   Object.fromEntries(
+//     Object
+//       .entries(NORMALIZED_VIDEO_CODECS)
+//       .flatMap(([normalized, variant]) => variant.map((codec => [codec, normalized])))
+//   ) as { [Key in VideoCodec]: keyof typeof NORMALIZED_VIDEO_CODECS }
+
+export const normalizeVideoCodec = <T extends VideoCodec>(videoCodec: T) =>
+    pipe(
+      NORMALIZED_VIDEO_CODECS,
+      RR.toEntries,
+      A.findFirst(([normalizedName, variants]) => variants.some(variant => variant === videoCodec)),
+      O.map(([normalizedName]) => normalizedName),
+      toUndefined
+    )
+
+const makeColorDepth = <T extends number>(num: T) => [
+  `${num}BIT`,
+  `${num}BITS`,
+  `${num}-BIT`,
+  `${num}-BITS`
+] as const
+
+const NORMALIZED_COLOR_DEPTH = {
+  '8BIT': makeColorDepth(8),
+  '10BIT': makeColorDepth(10),
+  '12BIT': makeColorDepth(12)
+} as const
 
 export const VIDEO_TERMS = sortTermLength([
   'HDR',

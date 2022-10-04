@@ -3,7 +3,7 @@ import {
   everyCharUntil, endOfInput, anyCharExcept,
   whitespace, digit, Ok, Parser, 
 } from 'arcsecond'
-import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS } from './common'
+import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS, normalizeVideoCodec } from './common'
 import { istr, ichar } from './utils'
 
 import { groupBy } from 'fp-ts/lib/NonEmptyArray'
@@ -276,10 +276,15 @@ export const format = <T extends ReturnType<typeof parse>>(result: T) => {
         : result.resolution?.at(0)
     ) as Resolution
 
+  const languages = result.language?.map(lang => NORMALIZED_LANGUAGES[lang])
+  const videoCodecs = result.videoCodec?.map(normalizeVideoCodec)
+  const audioCodecs = result.audioCodec?.map(codec => AUDIO_CODECS[codec])
+
   return {
     ...result,
     group,
-    resolution
+    resolution,
+    languages
   }
 }
 
