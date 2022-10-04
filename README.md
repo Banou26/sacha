@@ -17,6 +17,7 @@ Sacha can parse all sorts of formats:
 Cyberpunk.Edgerunners.S01.1080p.NF.WEB-DL.DDP5.1.DV.HDR.H.265.HUN.JPN.ENG-VARYG (DUAL, Multi-sub)
 Ni Zhenshi Ge Tiancai - 15 - 1080p WEB H.264 -NanDesuKa (B-Global).mkv
 Initial D - Third Stage (High Quality) MKV [1080p] Blu-Ray Rip (Stabilized V2)
+[Erai-raws] Youkoso Jitsuryoku Shijou Shugi no Kyoushitsu e S2 - 02 [480p][Multiple Subtitle][5F5B5979].mkv
 ```
 
 
