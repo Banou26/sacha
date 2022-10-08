@@ -1,6 +1,6 @@
 // import type { AnitomyResult } from 'anitomyscript'
 // import { LanguageTag } from '../../scannarr/src/utils/language'
-import './parser'
+// import './parser'
 
 // import anitomy from 'anitomyscript/dist/anitomyscript.bundle'
 
@@ -14,3 +14,5 @@ import './parser'
 //     checksum: ''
 //   }
 // }
+
+export * from './parser'

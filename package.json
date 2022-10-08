@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node -r ts-node/register bin/test.ts",
+    "test-watch": "nodemon -r ts-node/register bin/test.ts",
     "dev": "nodemon -e * --watch \"src/**/*\" --exec \"node -r ts-node/register src/index.ts\""
   },
   "author": "Banou26",

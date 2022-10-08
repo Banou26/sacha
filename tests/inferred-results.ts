@@ -1,4 +1,4 @@
-[
+export default [
   {
     "filename": "[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]",
     "group": "silly",
