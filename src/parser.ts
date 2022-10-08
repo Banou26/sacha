@@ -12,6 +12,7 @@ import { fromEntries, toEntries } from 'fp-ts/lib/Record'
 import { filter } from 'fp-ts/lib/Array'
 import { pipe } from 'fp-ts/lib/function'
 import { Resolution } from './types'
+import { extractArray } from './utils/array'
 
 type RegroupStringPrimitive = string | number | { [key: string]: any }
 type RegroupStringPart<S extends RegroupStringPrimitive> = S | S[]
@@ -157,27 +158,30 @@ const dateToken = choice([
   yearToken
 ])
 
-const metadataTokenValue = (delimiter: Delimiter) =>
+const metadataTokenValue = [
+  typeTermToken.map(res => ({ type: 'typeTerm' as const, value: res })),
+  audioCodecToken.map(res => ({ type: 'audioCodec' as const, value: res })),
+  audioTermToken.map(res => ({ type: 'audioTerm' as const, value: res })),
+  videoCodecToken.map(res => ({ type: 'videoCodec' as const, value: res })),
+  videoTermToken.map(res => ({ type: 'videoTerm' as const, value: res })),
+  resolutionToken.map(res => ({ type: 'resolution' as const, value: res })),
+  languageToken.map(res => ({ type: 'language' as const, value: res })),
+  subtitleTermToken.map(res => ({ type: 'subtitleTerm' as const, value: res })),
+  // needs to be furthest down as it can override other tokens like resolutions
+  dateToken.map(res => ({ type: 'date' as const, value: res })),
+] as const
+
+const delimitedMetadataTokenValue = (delimiter: Delimiter) =>
   choice ([
-    typeTermToken.map(res => ({ type: 'typeTerm' as const, value: res })),
-    audioCodecToken.map(res => ({ type: 'audioCodec' as const, value: res })),
-    audioTermToken.map(res => ({ type: 'audioTerm' as const, value: res })),
-    videoCodecToken.map(res => ({ type: 'videoCodec' as const, value: res })),
-    videoTermToken.map(res => ({ type: 'videoTerm' as const, value: res })),
-    resolutionToken.map(res => ({ type: 'resolution' as const, value: res })),
-    languageToken.map(res => ({ type: 'language' as const, value: res })),
-    subtitleTermToken.map(res => ({ type: 'subtitleTerm' as const, value: res })),
-    // needs to be furthest down as it can override other tokens like resolutions
-    dateToken.map(res => ({ type: 'date' as const, value: res })),
+    ...metadataTokenValue,
     whitespace,
     anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
   ])
 
-
-const makeMetadataToken = <T extends Delimiter>(delimiter: T) =>
+const makeDelimitedMetadataToken = <T extends Delimiter>(delimiter: T) =>
   sequenceOf ([
     char (delimiter) as Parser<Delimiter>,
-    many (metadataTokenValue (delimiter)),
+    many (delimitedMetadataTokenValue (delimiter)),
     char (getCorrespondingDelimiter(delimiter)) as Parser<CorrespondDelimiter<Delimiter>>
   ]).map((result) => ({
     type: 'METADATA' as const,
@@ -188,8 +192,8 @@ const makeMetadataToken = <T extends Delimiter>(delimiter: T) =>
 const metadataToken =
   choice (
     delimitersArray
-      .map(makeMetadataToken)
-  ) as Parser<ExtractParserResult<ReturnType<typeof makeMetadataToken>>>
+      .map(makeDelimitedMetadataToken)
+  ) as Parser<ExtractParserResult<ReturnType<typeof makeDelimitedMetadataToken>>>
 
 const nonMetadataToken =
   everyCharUntil ( choice ([metadataToken, endOfInput]))
@@ -230,6 +234,19 @@ const parser =
 
       const tokens = [firstToken, ...restTokens]
 
+      const dataTokens =
+        pipe(
+          tokens,
+          filter(token => token.type === 'DATA'),
+          filter(token =>
+            typeof token.value === 'string'
+              ? !!token.value.trim().length
+              : true
+          )
+        )
+
+      console.log('dataTokens', dataTokens)
+
       const metadataTokens =
         pipe(
           tokens,
@@ -251,6 +268,7 @@ const parser =
       // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
       const groupedResults = pipe(
         parsedMetadata,
+        // [...parsedMetadata, ...dataTokens],
         groupBy((token) => token.type),
         toEntries,
         map(([key, val]) => [key, val.map(token => token.value)]),
@@ -262,18 +280,47 @@ const parser =
     })
 
 export const parse = (str: string) => {
-  const _result = parser.run(str)
-  if (_result.isError) throw new Error('Parser errored')
-  return _result.result
+  const parserResult = parser.run(str)
+  if (parserResult.isError) throw new Error('Parser errored')
+  const { result } = parserResult
+  console.log('parser result', result)
+
+
+  const ret = {
+    ...result,
+    date:
+      result.date
+      ? (
+        extractArray(
+          result.date.map(dateGroup =>
+            Array.isArray(dateGroup)
+              ? dateGroup.join('')
+              : dateGroup
+          )
+        )
+      )
+      : undefined,
+    group: extractArray(result.group),
+    resolution:
+      extractArray(
+        result.resolution.map(resolutionGroup =>
+          Array.isArray(resolutionGroup)
+            ? resolutionGroup.join('')
+            : resolutionGroup
+        )
+      )
+  }
+  console.log('ret', ret)
+  return ret
 }
 
 export const format = <T extends ReturnType<typeof parse>>(result: T) => {
-  const group = result.group?.at(0)
+  const group = result.group
   const resolution =
     Number(
-      Array.isArray(result.resolution?.at(0))
-        ? result.resolution.at(0)?.at(0)
-        : result.resolution?.at(0)
+      Array.isArray(result.resolution)
+        ? result.resolution.at(0)
+        : result.resolution
     ) as Resolution
 
   const languages = result.language?.map(lang => NORMALIZED_LANGUAGES[lang])
