@@ -147,3 +147,6 @@ expect(inferredResults, {
   audioLanguages: [LanguageTag.JA]
 })
 ```
+
+### Todos:
+- make a system that takes all terms, sort them by length, apply them, and re-categorize them back to prevent issues with small terms overriding longer ones
