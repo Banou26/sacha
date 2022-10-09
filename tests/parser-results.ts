@@ -38,8 +38,8 @@ export default [
   // },
   {
     "filename": "Cyberpunk Edgerunners WEB-DL 1080P HDR DV EAC3 VF VOSTFR-LTPD v2",
-    "group": "-LTPD",
-    "title": "Cyberpunk Edgerunners",
+    "groups": ["-LTPD"],
+    "titles": ["Cyberpunk Edgerunners"],
     "resolutionTerms": ["1080P"],
     "videoTerms": ["HDR", "DV"],
     "audioCodecTerms": ["EAC3"],
@@ -122,4 +122,23 @@ export default [
   //   "type": "WEB-DL",
   //   "source": "NF"
   // }
-]
+].map(({ filename, ...parserResult }) => ({
+  filename,
+  // @ts-ignore
+  titles: undefined,
+  // @ts-ignore
+  audioCodecTerms: undefined,
+  // @ts-ignore
+  audioLanguageTerms: undefined,
+  // @ts-ignore
+  dates: undefined,
+  // @ts-ignore
+  groups: undefined,
+  // @ts-ignore
+  versionTerms: undefined,
+  // @ts-ignore
+  resolutionTerms: undefined,
+  // @ts-ignore
+  subtitleTerms: undefined,
+  ...parserResult
+}))

@@ -179,7 +179,7 @@ const nonDelimitedGroupToken = sequenceOf([
       ])
     )
   )
-]).map(result => ({ type: 'group' as const, value: regroupStrings(result).flat() }))
+]).map(result => ({ type: 'groups' as const, value: regroupStrings(result).flat() }))
 
 const metadataTokenValue = [
   versionToken.map(res => ({ type: 'versionTerms' as const, value: res })),
@@ -195,7 +195,7 @@ const metadataTokenValue = [
   subtitleLanguageTermsToken.map(res => ({ type: 'subtitleLanguageTerms' as const, value: res })),
   audioLanguageTermsToken.map(res => ({ type: 'audioLanguageTerms' as const, value: res })),
   // Date token needs to be furthest down as it can override other tokens like resolutions
-  dateToken.map(res => ({ type: 'date' as const, value: res })),
+  dateToken.map(res => ({ type: 'dates' as const, value: res }))
 ] as const
 
 const delimitedMetadataTokenValue = (delimiter: Delimiter) =>
@@ -269,8 +269,7 @@ const parser =
       const [_firstToken, ...restTokens] = _tokens
 
       type foo = Extract<typeof _tokens[number], { type: 'METADATA' }>['value']
-      type bar = Extract<foo, { type: 'group' }>
-
+      type bar = Extract<foo, { type: 'groups' }>
 
       const firstToken =
         (_firstToken.type === 'METADATA'
@@ -284,12 +283,16 @@ const parser =
       const dataTokens =
         pipe(
           tokens,
-          filter(token => token.type === 'DATA'),
+          filter((token): token is typeof token & { type: 'DATA' } => token.type === 'DATA'),
           filter(token =>
             typeof token.value === 'string'
               ? !!token.value.trim().length
               : true
-          )
+          ),
+          map(token => ({
+            type: 'titles',
+            value: token.value.trim()
+          }) as const)
         )
 
       console.log('dataTokens', dataTokens)
@@ -314,14 +317,14 @@ const parser =
 
       // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
       const groupedResults = pipe(
-        parsedMetadata,
-        // [...parsedMetadata, ...dataTokens],
+        // parsedMetadata,
+        [...parsedMetadata, ...dataTokens],
         groupBy((token) => token.type),
         toEntries,
         map(([key, val]) => [key, val.map(token => token.value)]),
         // @ts-ignore
         fromEntries
-      ) as unknown as GroupBy<typeof parsedMetadata>
+      ) as unknown as GroupBy<typeof parsedMetadata | typeof dataTokens>
 
       return groupedResults
     })
@@ -338,26 +341,20 @@ export const parse = (str: string) => {
   console.log('parser result', result)
 
   return {
-    audioCodecTerms: result.audioCodecTerms?.map(flatMergeStringGroups),
-    audioLanguageTerms: result.audioLanguageTerms?.map(flatMergeStringGroups),
-    date:
-      result.date
-      ? (
-        extractArray(
-          result.date.map(dateGroup =>
-            Array.isArray(dateGroup)
-              ? dateGroup.join('')
-              : dateGroup
-          )
-        )
-      )
-      : undefined,
-    group:
-      result.group?.map(groupGroup =>
+    titles: result.titles.map(flatMergeStringGroups),
+    audioCodecTerms: result.audioCodecTerms.map(flatMergeStringGroups),
+    audioLanguageTerms: result.audioLanguageTerms.map(flatMergeStringGroups),
+    dates: result.dates?.map(dateGroup =>
+      Array.isArray(dateGroup)
+        ? dateGroup.join('')
+        : dateGroup
+    ),
+    groups:
+      result.groups.map(groupGroup =>
         Array.isArray(groupGroup)
           ? groupGroup.join('')
           : groupGroup
-      )?.at(0),
+      ),
     versionTerms:
       result.versionTerms?.map(versionTermGroup =>
         Array.isArray(versionTermGroup)
@@ -375,7 +372,10 @@ export const parse = (str: string) => {
         Array.isArray(subtitleTermGroup)
           ? subtitleTermGroup.join('')
           : subtitleTermGroup
-      )
+      ),
+    typeTerms: result.typeTerms.map(flatMergeStringGroups),
+    subtitleLanguageTerms: result.subtitleLanguageTerms.map(flatMergeStringGroups),
+    videoTerms: result.videoTerms.map(flatMergeStringGroups)
   }
 }
 
