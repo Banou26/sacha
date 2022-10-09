@@ -108,7 +108,7 @@ export const AUDIO_CODECS = sortTermLength([
 ] as const)
 
 export const AUDIO_TERMS = sortTermLength([
-  'Dual-Audio'
+  'Dual-Audio', 'Dual Audio'
 ] as const)
 
 /** https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers */
@@ -131,10 +131,16 @@ export const SOURCES = sortTermLength([
 export const NORMALIZED_LANGUAGES = {
   'ENG': LanguageTag.EN,
   'POR-BR': LanguageTag.PT,
+
   'SPA-LA': LanguageTag.ES,
   'SPA': LanguageTag.ES,
+
   'ARA': LanguageTag.AR,
+
   'FRE': LanguageTag.FR,
+  'FR': LanguageTag.FR,
+  'VF': LanguageTag.FR,
+
   'GER': LanguageTag.DE,
   'ITA': LanguageTag.IT,
   'JPN': LanguageTag.JA,
@@ -162,3 +168,9 @@ export const NORMALIZED_LANGUAGES = {
   'FIL': LanguageTag.FIL,
   'RUS': LanguageTag.RU
 } as const
+
+export const NORMALIZED_SUBTITLE_LANGUAGES = {
+  'VOSTFR': LanguageTag.FR,
+} as const
+
+export const SUBTITLE_TERMS = ['multi-subs', 'multi subs', 'multiple subtitle', 'subtitle'] as const

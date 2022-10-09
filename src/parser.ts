@@ -3,7 +3,7 @@ import {
   everyCharUntil, endOfInput, anyCharExcept,
   whitespace, digit, Ok, Parser, 
 } from 'arcsecond'
-import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS, normalizeVideoCodec } from './common'
+import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS, normalizeVideoCodec, SUBTITLE_TERMS, NORMALIZED_SUBTITLE_LANGUAGES } from './common'
 import { istr, ichar } from './utils'
 
 import { groupBy } from 'fp-ts/lib/NonEmptyArray'
@@ -56,11 +56,10 @@ const delimitersArray = Object.keys(metadataDelimiters) as Delimiter[]
 
 const getCorrespondingDelimiter = <T extends Delimiter>(delimiter: T) => metadataDelimiters[delimiter]
 
-const subtitleTerms = ['multiple subtitle', 'subtitle'] as const
 const subtitleTermToken = choice (
-  subtitleTerms
+  SUBTITLE_TERMS
     .map(istr)
-) as Parser<typeof subtitleTerms[number]>
+) as Parser<typeof SUBTITLE_TERMS[number]>
 
 const resolutionNumberToken = choice (
   RESOLUTIONS.map(res => str(res.toString()))
@@ -119,12 +118,19 @@ const audioTermToken =
       .map(str)
   ) as Parser<typeof AUDIO_TERMS[number]>
 
-const languageToken =
+const audioLanguageTermsToken =
   choice (
     Object
       .keys(NORMALIZED_LANGUAGES)
       .map(str)
   ) as Parser<keyof typeof NORMALIZED_LANGUAGES>
+
+const subtitleLanguageTermsToken =
+  choice (
+    Object
+      .keys(NORMALIZED_SUBTITLE_LANGUAGES)
+      .map(str)
+  ) as Parser<keyof typeof NORMALIZED_SUBTITLE_LANGUAGES>
 
 const yearToken = sequenceOf([
   digit,
@@ -158,16 +164,37 @@ const dateToken = choice([
   yearToken
 ])
 
+const versionToken = sequenceOf([
+  ichar('v'),
+  digit
+])
+
+const nonDelimitedGroupToken = sequenceOf([
+  char('-'),
+  many (
+    anyCharExcept (
+      choice([
+        char ('.'),
+        whitespace
+      ])
+    )
+  )
+]).map(result => ({ type: 'group' as const, value: regroupStrings(result).flat() }))
+
 const metadataTokenValue = [
-  typeTermToken.map(res => ({ type: 'typeTerm' as const, value: res })),
-  audioCodecToken.map(res => ({ type: 'audioCodec' as const, value: res })),
-  audioTermToken.map(res => ({ type: 'audioTerm' as const, value: res })),
-  videoCodecToken.map(res => ({ type: 'videoCodec' as const, value: res })),
-  videoTermToken.map(res => ({ type: 'videoTerm' as const, value: res })),
-  resolutionToken.map(res => ({ type: 'resolution' as const, value: res })),
-  languageToken.map(res => ({ type: 'language' as const, value: res })),
-  subtitleTermToken.map(res => ({ type: 'subtitleTerm' as const, value: res })),
-  // needs to be furthest down as it can override other tokens like resolutions
+  versionToken.map(res => ({ type: 'versionTerms' as const, value: res })),
+  typeTermToken.map(res => ({ type: 'typeTerms' as const, value: res })),
+  audioCodecToken.map(res => ({ type: 'audioCodecTerms' as const, value: res })),
+  audioTermToken.map(res => ({ type: 'audioTerms' as const, value: res })),
+  videoCodecToken.map(res => ({ type: 'videoCodecTerms' as const, value: res })),
+  videoTermToken.map(res => ({ type: 'videoTerms' as const, value: res })),
+  resolutionToken.map(res => ({ type: 'resolutionTerms' as const, value: res })),
+  subtitleTermToken.map(res => ({ type: 'subtitleTerms' as const, value: res })),
+  // todo: make a system that takes all terms, sort them by length, apply them, and re-categorize them back to prevent issues with small terms overriding longer ones
+  // Subtitle language token needs to be higher than language tokens as it generally has longer matching tokens than language
+  subtitleLanguageTermsToken.map(res => ({ type: 'subtitleLanguageTerms' as const, value: res })),
+  audioLanguageTermsToken.map(res => ({ type: 'audioLanguageTerms' as const, value: res })),
+  // Date token needs to be furthest down as it can override other tokens like resolutions
   dateToken.map(res => ({ type: 'date' as const, value: res })),
 ] as const
 
@@ -189,11 +216,26 @@ const makeDelimitedMetadataToken = <T extends Delimiter>(delimiter: T) =>
     value: regroupStrings(result).slice(1, -1).flat()
   }))
 
+const nonDelimitedMetadataToken =
+  choice ([
+    ...metadataTokenValue,
+    nonDelimitedGroupToken
+  ])
+    .map((result) => ({
+      type: 'METADATA' as const,
+      value: result
+    }))
+
 const metadataToken =
   choice (
-    delimitersArray
-      .map(makeDelimitedMetadataToken)
-  ) as Parser<ExtractParserResult<ReturnType<typeof makeDelimitedMetadataToken>>>
+    [
+      ...delimitersArray.map(makeDelimitedMetadataToken),
+      nonDelimitedMetadataToken
+    ]
+  )  as Parser<
+    ExtractParserResult<ReturnType<typeof makeDelimitedMetadataToken>>
+    | ExtractParserResult<typeof nonDelimitedMetadataToken>
+  >
 
 const nonMetadataToken =
   everyCharUntil ( choice ([metadataToken, endOfInput]))
@@ -225,6 +267,11 @@ const parser =
   many1 (token)
     .map((_tokens) => {
       const [_firstToken, ...restTokens] = _tokens
+
+      type foo = Extract<typeof _tokens[number], { type: 'METADATA' }>['value']
+      type bar = Extract<foo, { type: 'group' }>
+
+
       const firstToken =
         (_firstToken.type === 'METADATA'
         && _firstToken.value.length === 1
@@ -279,15 +326,20 @@ const parser =
       return groupedResults
     })
 
+const flatMergeStringGroups = <T extends string | string[]>(stringGroup: T) =>
+  Array.isArray(stringGroup)
+    ? stringGroup.join('')
+    : stringGroup
+
 export const parse = (str: string) => {
   const parserResult = parser.run(str)
   if (parserResult.isError) throw new Error('Parser errored')
   const { result } = parserResult
   console.log('parser result', result)
 
-
-  const ret = {
-    ...result,
+  return {
+    audioCodecTerms: result.audioCodecTerms?.map(flatMergeStringGroups),
+    audioLanguageTerms: result.audioLanguageTerms?.map(flatMergeStringGroups),
     date:
       result.date
       ? (
@@ -300,28 +352,39 @@ export const parse = (str: string) => {
         )
       )
       : undefined,
-    group: extractArray(result.group),
-    resolution:
-      extractArray(
-        result.resolution.map(resolutionGroup =>
-          Array.isArray(resolutionGroup)
-            ? resolutionGroup.join('')
-            : resolutionGroup
-        )
+    group:
+      result.group?.map(groupGroup =>
+        Array.isArray(groupGroup)
+          ? groupGroup.join('')
+          : groupGroup
+      )?.at(0),
+    versionTerms:
+      result.versionTerms?.map(versionTermGroup =>
+        Array.isArray(versionTermGroup)
+          ? versionTermGroup.join('')
+          : versionTermGroup
+      ),
+    resolutionTerms:
+      result.resolutionTerms?.map(resolutionTermGroup =>
+        Array.isArray(resolutionTermGroup)
+          ? resolutionTermGroup.join('')
+          : resolutionTermGroup
+      ),
+    subtitleTerms:
+      result.subtitleTerms?.map(subtitleTermGroup =>
+        Array.isArray(subtitleTermGroup)
+          ? subtitleTermGroup.join('')
+          : subtitleTermGroup
       )
   }
-  console.log('ret', ret)
-  return ret
 }
 
 export const format = <T extends ReturnType<typeof parse>>(result: T) => {
   const group = result.group
   const resolution =
-    Number(
-      Array.isArray(result.resolution)
-        ? result.resolution.at(0)
-        : result.resolution
-    ) as Resolution
+    Array.isArray(result.resolution)
+      ? result.resolution.map(Number) as Resolution[]
+      : Number(result.resolution) as Resolution
 
   const languages = result.language?.map(lang => NORMALIZED_LANGUAGES[lang])
   const videoCodecs = result.videoCodec?.map(normalizeVideoCodec)
@@ -337,8 +400,15 @@ export const format = <T extends ReturnType<typeof parse>>(result: T) => {
 
 export default parse
 
-const res = parse('[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]')
-const res2 = parse('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
+// const res = parse('[silly] Cyberpunk Edgerunners (WEB-DL 1080p HEVC E-AC-3) [Dual-Audio]')
+// console.log(res)
 
-console.log(format(res))
-console.log(format(res2))
+// const res2 = parse('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
+// console.log(res2)
+
+const res3 = parse('Cyberpunk Edgerunners WEB-DL 1080P HDR DV EAC3 VF VOSTFR-LTPD v2')
+console.log(res3)
+
+
+// console.log(format(res))
+// console.log(format(res2))
