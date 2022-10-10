@@ -129,48 +129,58 @@ export const SOURCES = sortTermLength([
 // https://iso639-3.sil.org/code/${LANG_SHORTHAND}
 // https://iso639-3.sil.org/code_tables/639/read
 export const NORMALIZED_LANGUAGES = {
-  'ENG': LanguageTag.EN,
+  ENG: LanguageTag.EN,
   'POR-BR': LanguageTag.PT,
 
   'SPA-LA': LanguageTag.ES,
-  'SPA': LanguageTag.ES,
+  SPA: LanguageTag.ES,
 
-  'ARA': LanguageTag.AR,
+  ARA: LanguageTag.AR,
 
-  'FRE': LanguageTag.FR,
-  'FR': LanguageTag.FR,
-  'VF': LanguageTag.FR,
+  FRE: LanguageTag.FR,
+  FR: LanguageTag.FR,
+  VF: LanguageTag.FR,
 
-  'GER': LanguageTag.DE,
-  'ITA': LanguageTag.IT,
-  'JPN': LanguageTag.JA,
-  'POR': LanguageTag.PT,
-  'POL': LanguageTag.PL,
-  'DUT': LanguageTag.NL,
-  'NOB': LanguageTag.NB,
-  'FIN': LanguageTag.FI,
-  'TUR': LanguageTag.TR,
-  'SWE': LanguageTag.SV,
-  'GRE': LanguageTag.EL,
-  'HEB': LanguageTag.HE,
-  'RUM': LanguageTag.RM,
-  'IND': LanguageTag.ID,
-  'THA': LanguageTag.TH,
-  'KOR': LanguageTag.KO,
-  'DAN': LanguageTag.DA,
-  'CHI': LanguageTag.ZH,
-  'VIE': LanguageTag.VI,
-  'UKR': LanguageTag.UK,
-  'HUN': LanguageTag.HU,
-  'CES': LanguageTag.CS,
-  'HRV': LanguageTag.HR,
-  'MAY': LanguageTag.MS,
-  'FIL': LanguageTag.FIL,
-  'RUS': LanguageTag.RU
+  GER: LanguageTag.DE,
+  ITA: LanguageTag.IT,
+  JPN: LanguageTag.JA,
+  POR: LanguageTag.PT,
+  POL: LanguageTag.PL,
+  DUT: LanguageTag.NL,
+  NOB: LanguageTag.NB,
+  FIN: LanguageTag.FI,
+  TUR: LanguageTag.TR,
+  SWE: LanguageTag.SV,
+  GRE: LanguageTag.EL,
+  HEB: LanguageTag.HE,
+  RUM: LanguageTag.RM,
+  IND: LanguageTag.ID,
+  THA: LanguageTag.TH,
+  KOR: LanguageTag.KO,
+  DAN: LanguageTag.DA,
+  CHI: LanguageTag.ZH,
+  VIE: LanguageTag.VI,
+  UKR: LanguageTag.UK,
+  HUN: LanguageTag.HU,
+  CES: LanguageTag.CS,
+  HRV: LanguageTag.HR,
+  MAY: LanguageTag.MS,
+  FIL: LanguageTag.FIL,
+  RUS: LanguageTag.RU
 } as const
 
 export const NORMALIZED_SUBTITLE_LANGUAGES = {
   'VOSTFR': LanguageTag.FR,
 } as const
 
-export const SUBTITLE_TERMS = ['multi-subs', 'multi subs', 'multiple subtitle', 'subtitle'] as const
+export const SUBTITLE_TERMS = ['multi-sub', 'multi-subs', 'multi subs', 'multiple subtitle', 'subtitle'] as const
+
+export const BATCH_TERMS = ['batch', 'batched'] as const
+
+export const SOURCE_TERMS = {
+  'NF': 'Netflix',
+} as const
+
+export const SEASON_TERMS = {
+  'S01': 1,
+} as const
