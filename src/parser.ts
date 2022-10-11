@@ -7,7 +7,7 @@ import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUA
 import { istr, ichar } from './utils'
 
 import { groupBy } from 'fp-ts/lib/NonEmptyArray'
-import { map } from 'fp-ts/lib/Array'
+import { flatten, map } from 'fp-ts/lib/Array'
 import { fromEntries, toEntries } from 'fp-ts/lib/Record'
 import { filter } from 'fp-ts/lib/Array'
 import { pipe } from 'fp-ts/lib/function'
@@ -208,7 +208,7 @@ const metadataTokenValue = [
   videoCodecToken.map(res => ({ type: 'videoCodecTerms' as const, value: res })),
   videoTermToken.map(res => ({ type: 'videoTerms' as const, value: res })),
   resolutionToken.map(res => ({ type: 'resolutionTerms' as const, value: res })),
-  batchTermToken.map(res => ({ type: 'batchTerms' as const, value: res })),
+  // batchTermToken.map(res => ({ type: 'batchTerms' as const, value: res })),
   subtitleTermToken.map(res => ({ type: 'subtitleTerms' as const, value: res })),
   // todo: make a system that takes all terms, sort them by length, apply them, and re-categorize them back to prevent issues with small terms overriding longer ones
   // Subtitle language token needs to be higher than language tokens as it generally has longer matching tokens than language
@@ -326,10 +326,11 @@ const parser =
         )
 
       const parsedMetadata = pipe(
-        metadataTokens
-        .map(({ value }) => value)
-        .flat()
-        .filter(value =>
+        metadataTokens,
+        map((token) => token?.value),
+        filter((token): token is typeof token & { value: any } => token),
+        flatten,
+        filter(value =>
           value
           && typeof value === 'object'
           && !Array.isArray(value),
