@@ -294,7 +294,7 @@ const parser =
       type bar = Extract<foo, { type: 'groups' }>
 
       const firstToken =
-        (_firstToken.type === 'METADATA'
+        (_firstToken?.type === 'METADATA'
         && _firstToken.value.length === 1
         && typeof _firstToken.value[0] === 'string')
           ? { ..._firstToken, value: [{ type: 'group' as const, value: _firstToken.value[0] }] }
@@ -305,7 +305,13 @@ const parser =
       const dataTokens =
         pipe(
           tokens,
-          filter((token): token is typeof token & { type: 'DATA' } => token.type === 'DATA'),
+          filter((token): token is typeof token & { type: 'DATA' } =>
+            Boolean(
+              token
+              && 'type' in token
+              && token.type === 'DATA'
+            )
+          ),
           filter(token =>
             typeof token.value === 'string'
               ? !!token.value.trim().length
@@ -313,27 +319,36 @@ const parser =
           ),
           map(token => ({
             type: 'titles',
-            value: token.value.trim()
+            value:
+              typeof token.value === 'string'
+                ? token.value.trim()
+                : token.value
           }) as const)
         )
-
-      console.log('dataTokens', dataTokens)
 
       const metadataTokens =
         pipe(
           tokens,
-          filter(token => token.type === 'METADATA')
+          filter((token): token is Extract<typeof token, { type: 'METADATA' }> =>
+            Boolean(
+              token
+              && 'type' in token
+              && token.type === 'METADATA'
+            )
+          )
         )
 
       const parsedMetadata = pipe(
         metadataTokens,
         map((token) => token?.value),
-        filter((token): token is typeof token & { value: any } => token),
+        filter((token): token is typeof token & { value: any } => Boolean(token)),
         flatten,
         filter(value =>
-          value
-          && typeof value === 'object'
-          && !Array.isArray(value),
+          Boolean(
+            value
+            && typeof value === 'object'
+            && !Array.isArray(value)
+          ),
         ),
         filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object')
       )
