@@ -14,6 +14,28 @@ import { pipe } from 'fp-ts/lib/function'
 import { Resolution } from './types'
 import { extractArray } from './utils/array'
 
+declare function _choice<A>([p1]: [Parser<A>]): Parser<A>;
+declare function _choice<A, B>([p1, p2]: [Parser<A>, Parser<B>]): Parser<A | B>;
+declare function _choice<A, B, C>([p1, p2, p3]: [Parser<A>, Parser<B>, Parser<C>]): Parser<A | B | C>;
+declare function _choice<A, B, C, D>([p1, p2, p3, p4]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>]): Parser<A | B | C | D>;
+declare function _choice<A, B, C, D, E>([p1, p2, p3, p4, p5]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>]): Parser<A | B | C | D | E>;
+declare function _choice<A, B, C, D, E, F>([p1, p2, p3, p4, p5, p6]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>]): Parser<A | B | C | D | E | F>;
+declare function _choice<A, B, C, D, E, F, G>([p1, p2, p3, p4, p5, p6, p7]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>]): Parser<A | B | C | D | E | F | G>;
+declare function _choice<A, B, C, D, E, F, G, H>([p1, p2, p3, p4, p5, p6, p7, p8]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>]): Parser<A | B | C | D | E | F | G | H>;
+declare function _choice<A, B, C, D, E, F, G, H, I>([p1, p2, p3, p4, p5, p6, p7, p8, p9]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>]): Parser<A | B | C | D | E | F | G | H | I>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>]): Parser<A | B | C | D | E | F | G | H | I | J>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>]): Parser<A | B | C | D | E | F | G | H | I | J | K>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M, N>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>, Parser<N>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M | N>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>, Parser<N>, Parser<O>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M | N | O>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>, Parser<N>, Parser<O>, Parser<P>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>, Parser<N>, Parser<O>, Parser<P>, Parser<Q>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>, Parser<N>, Parser<O>, Parser<P>, Parser<Q>, Parser<R>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>, Parser<N>, Parser<O>, Parser<P>, Parser<Q>, Parser<R>, Parser<S>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R| S>;
+declare function _choice<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T>([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20]: [Parser<A>, Parser<B>, Parser<C>, Parser<D>, Parser<E>, Parser<F>, Parser<G>, Parser<H>, Parser<I>, Parser<J>, Parser<K>, Parser<L>, Parser<M>, Parser<N>, Parser<O>, Parser<P>, Parser<Q>, Parser<R>, Parser<S>, Parser<T>]): Parser<A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R| S | T>;
+declare function _choice(parsers: Parser<any>[]): Parser<any>;
+
 type RegroupStringPrimitive = string | number | { [key: string]: any }
 type RegroupStringPart<S extends RegroupStringPrimitive> = S | S[]
 export type RegroupString = RegroupStringPart<RegroupStringPart<RegroupStringPrimitive>>
@@ -208,7 +230,7 @@ const metadataTokenValue = [
   videoCodecToken.map(res => ({ type: 'videoCodecTerms' as const, value: res })),
   videoTermToken.map(res => ({ type: 'videoTerms' as const, value: res })),
   resolutionToken.map(res => ({ type: 'resolutionTerms' as const, value: res })),
-  // batchTermToken.map(res => ({ type: 'batchTerms' as const, value: res })),
+  batchTermToken.map(res => ({ type: 'batchTerms' as const, value: res })),
   subtitleTermToken.map(res => ({ type: 'subtitleTerms' as const, value: res })),
   // todo: make a system that takes all terms, sort them by length, apply them, and re-categorize them back to prevent issues with small terms overriding longer ones
   // Subtitle language token needs to be higher than language tokens as it generally has longer matching tokens than language
@@ -221,7 +243,7 @@ const metadataTokenValue = [
 ] as const
 
 const delimitedMetadataTokenValue = (delimiter: Delimiter) =>
-  choice ([
+  (choice as typeof _choice) ([
     ...metadataTokenValue,
     whitespace,
     anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
@@ -297,7 +319,7 @@ const parser =
         (_firstToken?.type === 'METADATA'
         && _firstToken.value.length === 1
         && typeof _firstToken.value[0] === 'string')
-          ? { ..._firstToken, value: [{ type: 'group' as const, value: _firstToken.value[0] }] }
+          ? { ..._firstToken, value: [{ type: 'groups' as const, value: _firstToken.value[0] }] }
           : _firstToken
 
       const tokens = [firstToken, ...restTokens]
