@@ -285,7 +285,7 @@ const nonMetadataToken =
   everyCharUntil ( choice ([metadataToken, endOfInput]))
     .map(result => ({
       type: 'DATA' as const,
-      value: result as string
+      value: result
     }))
 
 const token = choice ([
@@ -312,11 +312,9 @@ const parser =
     .map((_tokens) => {
       const [_firstToken, ...restTokens] = _tokens
 
-      type foo = Extract<typeof _tokens[number], { type: 'METADATA' }>['value']
-      type bar = Extract<foo, { type: 'groups' }>
-
       const firstToken =
         (_firstToken?.type === 'METADATA'
+        && Array.isArray(_firstToken.value)
         && _firstToken.value.length === 1
         && typeof _firstToken.value[0] === 'string')
           ? { ..._firstToken, value: [{ type: 'groups' as const, value: _firstToken.value[0] }] }
@@ -364,6 +362,8 @@ const parser =
         metadataTokens,
         map((token) => token?.value),
         filter((token): token is typeof token & { value: any } => Boolean(token)),
+        // todo: try to remove this ts-ignore
+        // @ts-ignore
         flatten,
         filter(value =>
           Boolean(
@@ -377,11 +377,11 @@ const parser =
 
       // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
       const groupedResults = pipe(
-        // parsedMetadata,
         [...parsedMetadata, ...dataTokens],
         groupBy((token) => token.type),
         toEntries,
         map(([key, val]) => [key, val.map(token => token.value)]),
+        // todo: try to remove this ts-ignore
         // @ts-ignore
         fromEntries
       ) as unknown as GroupBy<typeof parsedMetadata | typeof dataTokens>
