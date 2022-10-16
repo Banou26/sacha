@@ -1,9 +1,16 @@
 import {
   str, sequenceOf, choice, char, many, many1,
   everyCharUntil, endOfInput, anyCharExcept,
-  whitespace, digit, Ok, Parser, 
+  whitespace, digit, Ok, Parser, everythingUntil, between, 
 } from 'arcsecond'
-import { AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS, normalizeVideoCodec, SUBTITLE_TERMS, NORMALIZED_SUBTITLE_LANGUAGES, SOURCE_TERMS, SEASON_TERMS, BATCH_TERMS } from './common'
+import {
+  AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS,
+  NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS,
+  SUBTITLE_TERMS, NORMALIZED_SUBTITLE_LANGUAGES,
+  SOURCE_TERMS, SEASON_TERMS, BATCH_TERMS,
+  normalizeVideoCodec,
+  SEASON_PART_TERMS
+} from './common'
 import { istr, ichar } from './utils'
 
 import { groupBy } from 'fp-ts/lib/NonEmptyArray'
@@ -12,7 +19,6 @@ import { fromEntries, toEntries } from 'fp-ts/lib/Record'
 import { filter } from 'fp-ts/lib/Array'
 import { pipe } from 'fp-ts/lib/function'
 import { Resolution } from './types'
-import { extractArray } from './utils/array'
 
 declare function _choice<A>([p1]: [Parser<A>]): Parser<A>;
 declare function _choice<A, B>([p1, p2]: [Parser<A>, Parser<B>]): Parser<A | B>;
@@ -118,69 +124,69 @@ const resolutionToken =
 const videoCodecToken =
   choice (
     VIDEO_CODECS
-      .map(str)
+      .map(istr)
   ) as Parser<typeof VIDEO_CODECS[number]>
 
 const videoTermToken =
   choice (
     VIDEO_TERMS
-      .map(str)
+      .map(istr)
   ) as Parser<typeof VIDEO_TERMS[number]>
 
 const typeTermToken =
   choice (
     TYPE_TERMS
-      .map(str)
+      .map(istr)
   ) as Parser<typeof TYPE_TERMS[number]>
 
 const audioCodecToken =
   choice (
     AUDIO_CODECS
-      .map(str)
+      .map(istr)
   ) as Parser<typeof AUDIO_CODECS[number]>
 
 const audioTermToken =
   choice (
     AUDIO_TERMS
-      .map(str)
+      .map(istr)
   ) as Parser<typeof AUDIO_TERMS[number]>
 
 const audioLanguageTermsToken =
   choice (
     Object
       .keys(NORMALIZED_LANGUAGES)
-      .map(str)
+      .map(istr)
   ) as Parser<keyof typeof NORMALIZED_LANGUAGES>
 
 const subtitleLanguageTermsToken =
   choice (
     Object
       .keys(NORMALIZED_SUBTITLE_LANGUAGES)
-      .map(str)
+      .map(istr)
   ) as Parser<keyof typeof NORMALIZED_SUBTITLE_LANGUAGES>
 
 const sourceTermsToken =
   choice (
     Object
       .keys(SOURCE_TERMS)
-      .map(str)
+      .map(istr)
   ) as Parser<keyof typeof SOURCE_TERMS>
 
-const seasonTermsToken =
-  choice (
-    Object
-      .keys(SEASON_TERMS)
-      .map(str)
-  ) as Parser<keyof typeof SEASON_TERMS>
+// const seasonTermsToken =
+//   choice (
+//     Object
+//       .keys(SEASON_TERMS)
+//       .map(istr)
+//   ) as Parser<keyof typeof SEASON_TERMS>
 
-const yearToken = sequenceOf([
+const yearToken = sequenceOf ([
   digit,
   digit,
   digit,
   digit
 ])
 
-const datePartToken = sequenceOf([
+const datePartToken = sequenceOf ([
   digit,
   digit
 ])
@@ -190,37 +196,64 @@ type ExtractParserResult<T extends Parser<any>> = Extract<ReturnType<T['run']>, 
 const dateToken = choice([
   sequenceOf([
     yearToken,
-    char('.'),
+    char('.') as Parser<'.'>,
     datePartToken,
-    char('.'),
+    char('.') as Parser<'.'>,
     datePartToken
   ]),
   sequenceOf([
     datePartToken,
-    char('.'),
+    char('.') as Parser<'.'>,
     datePartToken,
-    char('.'),
+    char('.') as Parser<'.'>,
     yearToken
   ]),
   yearToken
 ])
 
 const versionToken = sequenceOf([
-  ichar('v'),
+  ichar('v') as Parser<'v' | 'V'>,
   digit
 ])
 
+const seasonPartToken = choice(
+  SEASON_PART_TERMS
+    .map(istr)
+) as Parser<typeof SEASON_PART_TERMS[number]>
+
+const seasonTermToken = sequenceOf([
+  seasonPartToken,
+  many1 (
+    choice ([
+      digit,
+      whitespace
+    ])
+  )
+]).map(result => regroupStrings(result).flat())
+
+const seasonRun = seasonTermToken.run('Season 01')
+console.log(seasonRun)
+
 const nonDelimitedGroupToken = sequenceOf([
   char('-'),
-  many (
-    anyCharExcept (
-      choice([
-        char ('.'),
-        whitespace
-      ])
-    )
+  everythingUntil(
+    choice([
+      char ('.'),
+      whitespace
+    ])
   )
-]).map(result => ({ type: 'groups' as const, value: regroupStrings(result).flat() }))
+  // many (
+  //   anyCharExcept (
+  //     choice([
+  //       char ('.'),
+  //       whitespace
+  //     ])
+  //   )
+  // )
+]).map(result => ({
+  type: 'groups' as const,
+  value: regroupStrings(result).flat()
+}))
 
 const metadataTokenValue = [
   versionToken.map(res => ({ type: 'versionTerms' as const, value: res })),
@@ -234,9 +267,9 @@ const metadataTokenValue = [
   subtitleTermToken.map(res => ({ type: 'subtitleTerms' as const, value: res })),
   // todo: make a system that takes all terms, sort them by length, apply them, and re-categorize them back to prevent issues with small terms overriding longer ones
   // Subtitle language token needs to be higher than language tokens as it generally has longer matching tokens than language
+  seasonTermToken.map(res => ({ type: 'seasonTerms' as const, value: res })),
   subtitleLanguageTermsToken.map(res => ({ type: 'subtitleLanguageTerms' as const, value: res })),
   audioLanguageTermsToken.map(res => ({ type: 'audioLanguageTerms' as const, value: res })),
-  seasonTermsToken.map(res => ({ type: 'seasonTerms' as const, value: res })),
   sourceTermsToken.map(res => ({ type: 'sourceTerms' as const, value: res })),
   // Date token needs to be furthest down as it can override other tokens like resolutions
   dateToken.map(res => ({ type: 'dates' as const, value: res }))
@@ -261,13 +294,30 @@ const makeDelimitedMetadataToken = <T extends Delimiter>(delimiter: T) =>
   }))
 
 const nonDelimitedMetadataToken =
-  choice ([
-    ...metadataTokenValue,
-    nonDelimitedGroupToken
+  // between (whitespace) (whitespace) (
+  //   choice ([
+  //     ...metadataTokenValue,
+  //     nonDelimitedGroupToken
+  //   ]),
+  // )
+  sequenceOf ([
+    whitespace,
+    choice ([
+      ...metadataTokenValue,
+      nonDelimitedGroupToken
+    ]),
+    many(whitespace)
   ])
+  // choice ([
+  //   ...metadataTokenValue,
+  //   nonDelimitedGroupToken
+  // ])
     .map((result) => ({
       type: 'METADATA' as const,
-      value: result
+      value:
+        Array.isArray(result)
+          ? result
+          : [result]
     }))
 
 const metadataToken =
@@ -307,10 +357,15 @@ type GroupBy<T extends TokenResult[]> = {
     Extract<T[number], { type: K }>['value'][]
 }
 
+// https://javascript.info/regexp-unicode
+const nonWordStrings = /[\p{S}\p{P}\p{Z}\p{C}]/gu
+
 const parser =
   many1 (token)
     .map((_tokens) => {
       const [_firstToken, ...restTokens] = _tokens
+
+      // console.log('_tokens', ..._tokens)
 
       const firstToken =
         (_firstToken?.type === 'METADATA'
@@ -337,6 +392,7 @@ const parser =
               ? !!token.value.trim().length
               : true
           ),
+          filter(token => token.value.replaceAll(nonWordStrings, '').length >= 1),
           map(token => ({
             type: 'titles',
             value:
@@ -358,6 +414,8 @@ const parser =
           )
         )
 
+      console.log('metadataTokens', ...metadataTokens)
+
       const parsedMetadata = pipe(
         metadataTokens,
         map((token) => token?.value),
@@ -375,6 +433,8 @@ const parser =
         filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object')
       )
 
+      console.log('parsedMetadata', ...parsedMetadata)
+
       // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
       const groupedResults = pipe(
         [...parsedMetadata, ...dataTokens],
@@ -386,13 +446,16 @@ const parser =
         fromEntries
       ) as unknown as GroupBy<typeof parsedMetadata | typeof dataTokens>
 
+      // console.log('groupedResults', groupedResults)
+
+
       return groupedResults
     })
 
 const flatMergeStringGroups = <T extends (string | number) | (string | number)[]>(stringGroup: T) =>
   Array.isArray(stringGroup)
-    ? stringGroup.join('')
-    : stringGroup
+    ? stringGroup.join('').trim()
+    : stringGroup.toString().trim()
 
 export const parse = (str: string) => {
   const parserResult = parser.run(str)
@@ -456,9 +519,11 @@ export default parse
 // const res2 = parse('[Erai-raws] Mushoku Tensei - Isekai Ittara Honki Dasu Part 2 - Eris the Goblin Slayer [1080p][HEVC][Multiple Subtitle] [ENG][POR-BR][SPA][FRE][GER]')
 // console.log(res2)
 
-const res3 = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
-console.log(res3)
+// const res3 = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
+// console.log(res3)
 
+const res = parse('Edgerunners Season 01 [1080p]')
+console.log(res)
 
 // console.log(format(res))
 // console.log(format(res2))

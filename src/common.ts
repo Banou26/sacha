@@ -112,18 +112,11 @@ export const AUDIO_TERMS = sortTermLength([
 ] as const)
 
 /** https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers */
-export const CONTAINERS = sortTermLength([
+export const CONTAINER_TERMS = sortTermLength([
   '3GP', 'ADTS', 'FLAC', 'MPEG',
   'MPEG-2', 'MP4', 'Ogg', 'MOV',
    // 'MPEG-4' (MP4)
   // 'QuickTime' (MOV)
-] as const)
-
-export const SOURCES = sortTermLength([
-  /** Netflix */
-  'NF',
-  /** Amazon Prime Video */
-  'AMZ'
 ] as const)
 
 // https://iso639-3.sil.org/code/${LANG_SHORTHAND}
@@ -173,14 +166,17 @@ export const NORMALIZED_SUBTITLE_LANGUAGES = {
   'VOSTFR': LanguageTag.FR,
 } as const
 
-export const SUBTITLE_TERMS = ['multi-sub', 'multi-subs', 'multi subs', 'multiple subtitle', 'subtitle'] as const
+export const SUBTITLE_TERMS = sortTermLength(['multi-sub', 'multi-subs', 'multi subs', 'multiple subtitle', 'subtitle'] as const)
 
-export const BATCH_TERMS = ['batch', 'batched'] as const
+export const BATCH_TERMS = sortTermLength(['batch', 'batched'] as const)
 
 export const SOURCE_TERMS = {
   'NF': 'Netflix',
+  'AMZ': 'Amazon'
 } as const
 
-export const SEASON_TERMS = {
-  'S01': 1,
-} as const
+export const SEASON_PART_TERMS = sortTermLength(['Season', 'S'] as const)
+
+// export const SEASON_TERMS = {
+//   'S01': 1,
+// } as const
