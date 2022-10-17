@@ -9,31 +9,31 @@ export default [
   //   "audioTerms": ["Dual-Audio"],
   //   "typeTerms": ["WEB-DL"]
   // },
-  {
-    "filename": "[DKB] Cyberpunk Edgerunners - Season 01 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][batch]",
-    "groups": ["DKB"],
-    "titles": ["Cyberpunk Edgerunners"],
-    "resolutionTerms": ["1080p"],
-    "videoCodecTerms": ["HEVC", "x265", "10bit"],
-    "audioTerms": ["Dual-Audio"],
-    "subtitleTerms": ["Multi-Subs"],
-    "seasonTerms": ["Season 01"],
-    "batchTerms": ["batch"]
-  },
   // {
-  //   "filename": "[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)",
-  //   "groups": ["EMBER"],
-  //   "dates": ["2022"],
-  //   "titles": ["Cyberpunk: Edgerunners"],
-  //   "alias": ["Cyberpunk Edgerunners"],
+  //   "filename": "[DKB] Cyberpunk Edgerunners - Season 01 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][batch]",
+  //   "groups": ["DKB"],
+  //   "titles": ["Cyberpunk Edgerunners"],
   //   "resolutionTerms": ["1080p"],
-  //   "videoCodecTerms": ["HEVC", "10 bits"],
-  //   "audioTerms": ["Dual Audio"],
-  //   "subtitleTerms:": ["Multi-Subs"],
-  //   "seasonTerms": ["Season 1"],
-  //   "batch": ["Batch"],
-  //   "typeTerms": ["WEBRip"]
+  //   "videoCodecTerms": ["HEVC", "x265", "10bit"],
+  //   "audioTerms": ["Dual-Audio"],
+  //   "subtitleTerms": ["Multi-Subs"],
+  //   "seasonTerms": ["Season 01"],
+  //   "batchTerms": ["batch"]
   // },
+  {
+    "filename": "[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)",
+    "groups": ["EMBER"],
+    "dates": ["2022"],
+    "titles": ["Cyberpunk: Edgerunners"],
+    "alias": ["Cyberpunk Edgerunners"],
+    "resolutionTerms": ["1080p"],
+    "videoCodecTerms": ["HEVC", "10 bits"],
+    "audioTerms": ["Dual Audio"],
+    "subtitleTerms:": ["Multi-Subs"],
+    "seasonTerms": ["Season 1"],
+    "batch": ["Batch"],
+    "typeTerms": ["WEBRip"]
+  },
   // {
   //   "filename": "Cyberpunk Edgerunners WEB-DL 1080P HDR DV EAC3 VF VOSTFR-LTPD v2",
   //   "groups": ["-LTPD"],

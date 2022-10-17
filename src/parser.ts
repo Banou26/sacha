@@ -351,26 +351,17 @@ type GroupBy<T extends TokenResult[]> = {
     Extract<T[number], { type: K }>['value'][]
 }
 
-// const escapeRegexp = (s: string) => {
-//   return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-// }
-
-// const trimSpecific = (value: string, find: string) => {
-//   const find2 = escapeRegexp(find);
-//   return value.replace(new RegExp(`^[${find2}]*(.*?)[${find2}]*$`), '$1')
-// }
-
 // https://javascript.info/regexp-unicode
 const nonWordStrings = /[\p{S}\p{P}\p{Z}\p{C}]/gu
 
-const trimNonWordStrings = /^[\p{S}\p{P}\p{Z}\p{C}]*(.*?)[\p{S}\p{P}\p{Z}\p{C}]*$/gu
+const trimNonWordStrings = /^[\p{S}\p{P}\p{Z}\p{C}]*(.*?)[\p{S}\p{P}\p{Z}\p{C}]*$/u
 
 const parser =
   many1 (token)
     .map((_tokens) => {
       const [_firstToken, ...restTokens] = _tokens
 
-      console.log('_tokens', ..._tokens)
+      // console.log('_tokens', ..._tokens)
 
       const firstToken =
         (_firstToken?.type === 'METADATA'
@@ -420,7 +411,7 @@ const parser =
           filter(token => token.value.length >= 1)
         )
 
-      console.log('metadataTokens', ...metadataTokens)
+      // console.log('metadataTokens', ...metadataTokens)
 
       const parsedMetadata = pipe(
         metadataTokens,
@@ -439,7 +430,7 @@ const parser =
         filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object')
       )
 
-      console.log('parsedMetadata', ...parsedMetadata)
+      // console.log('parsedMetadata', ...parsedMetadata)
 
       // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
       const groupedResults = pipe(
@@ -467,7 +458,7 @@ export const parse = (str: string) => {
   const parserResult = parser.run(str)
   if (parserResult.isError) throw new Error('Parser errored')
   const { result } = parserResult
-  console.log('parser result', result)
+  // console.log('parser result', result)
 
   return {
     titles: result.titles?.map(flatMergeStringGroups),
