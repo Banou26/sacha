@@ -25,13 +25,12 @@ export default [
     "groups": ["EMBER"],
     "dates": ["2022"],
     "titles": ["Cyberpunk: Edgerunners"],
-    "alias": ["Cyberpunk Edgerunners"],
     "resolutionTerms": ["1080p"],
     "videoCodecTerms": ["HEVC", "10 bits"],
     "audioTerms": ["Dual Audio"],
-    "subtitleTerms:": ["Multi-Subs"],
+    "subtitleTerms": ["Multi-Subs"],
     "seasonTerms": ["Season 1"],
-    "batch": ["Batch"],
+    "batchTerms": ["Batch"],
     "typeTerms": ["WEBRip"]
   },
   // {
