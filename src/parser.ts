@@ -1,7 +1,7 @@
 import {
   str, sequenceOf, choice, char, many, many1,
   everyCharUntil, endOfInput, anyCharExcept,
-  whitespace, digit, Ok, Parser, everythingUntil, between, 
+  whitespace, digit, Ok, Parser, everythingUntil, between, lookAhead, 
 } from 'arcsecond'
 import {
   AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS,
@@ -221,6 +221,17 @@ const seasonPartToken = choice(
     .map(istr)
 ) as Parser<typeof SEASON_PART_TERMS[number]>
 
+const episodeToken = sequenceOf([
+  digit,
+  many (whitespace),
+  choice ([
+    char('~'),
+    char('-')
+  ]),
+  many (whitespace),
+  digit
+])
+
 const seasonTermToken = sequenceOf([
   seasonPartToken,
   many1 (
@@ -231,29 +242,22 @@ const seasonTermToken = sequenceOf([
   )
 ]).map(result => regroupStrings(result).flat())
 
-const seasonRun = seasonTermToken.run('Season 01')
-console.log(seasonRun)
-
 const nonDelimitedGroupToken = sequenceOf([
   char('-'),
-  everythingUntil(
-    choice([
-      char ('.'),
-      whitespace
-    ])
+  many1 (
+    anyCharExcept (
+      choice([
+        char ('.'),
+        whitespace
+      ])
+    )
   )
-  // many (
-  //   anyCharExcept (
-  //     choice([
-  //       char ('.'),
-  //       whitespace
-  //     ])
-  //   )
-  // )
-]).map(result => ({
-  type: 'groups' as const,
-  value: regroupStrings(result).flat()
-}))
+])
+
+const dataTokenValue = [
+  episodeToken.map(res => ({ type: 'episodeTerms' as const, value: res })),
+  nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res).flat() }))
+]
 
 const metadataTokenValue = [
   versionToken.map(res => ({ type: 'versionTerms' as const, value: res })),
@@ -294,24 +298,14 @@ const makeDelimitedMetadataToken = <T extends Delimiter>(delimiter: T) =>
   }))
 
 const nonDelimitedMetadataToken =
-  // between (whitespace) (whitespace) (
-  //   choice ([
-  //     ...metadataTokenValue,
-  //     nonDelimitedGroupToken
-  //   ]),
-  // )
   sequenceOf ([
     whitespace,
-    choice ([
+    (choice as typeof _choice) ([
       ...metadataTokenValue,
-      nonDelimitedGroupToken
+      ...dataTokenValue
     ]),
-    many(whitespace)
+    lookAhead (many (whitespace))
   ])
-  // choice ([
-  //   ...metadataTokenValue,
-  //   nonDelimitedGroupToken
-  // ])
     .map((result) => ({
       type: 'METADATA' as const,
       value:
@@ -357,15 +351,26 @@ type GroupBy<T extends TokenResult[]> = {
     Extract<T[number], { type: K }>['value'][]
 }
 
+// const escapeRegexp = (s: string) => {
+//   return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+// }
+
+// const trimSpecific = (value: string, find: string) => {
+//   const find2 = escapeRegexp(find);
+//   return value.replace(new RegExp(`^[${find2}]*(.*?)[${find2}]*$`), '$1')
+// }
+
 // https://javascript.info/regexp-unicode
 const nonWordStrings = /[\p{S}\p{P}\p{Z}\p{C}]/gu
+
+const trimNonWordStrings = /^[\p{S}\p{P}\p{Z}\p{C}]*(.*?)[\p{S}\p{P}\p{Z}\p{C}]*$/gu
 
 const parser =
   many1 (token)
     .map((_tokens) => {
       const [_firstToken, ...restTokens] = _tokens
 
-      // console.log('_tokens', ..._tokens)
+      console.log('_tokens', ..._tokens)
 
       const firstToken =
         (_firstToken?.type === 'METADATA'
@@ -397,7 +402,7 @@ const parser =
             type: 'titles',
             value:
               typeof token.value === 'string'
-                ? token.value.trim()
+                ? trimNonWordStrings.exec(token.value.trim())?.[1] ?? token.value.trim()
                 : token.value
           }) as const)
         )
@@ -411,7 +416,8 @@ const parser =
               && 'type' in token
               && token.type === 'METADATA'
             )
-          )
+          ),
+          filter(token => token.value.length >= 1)
         )
 
       console.log('metadataTokens', ...metadataTokens)
@@ -522,7 +528,7 @@ export default parse
 // const res3 = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
 // console.log(res3)
 
-const res = parse('Edgerunners Season 01 [1080p]')
+const res = parse('[DKB] Cyberpunk Edgerunners - Season 01 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][batch]')
 console.log(res)
 
 // console.log(format(res))

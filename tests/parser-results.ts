@@ -14,10 +14,9 @@ export default [
     "groups": ["DKB"],
     "titles": ["Cyberpunk Edgerunners"],
     "resolutionTerms": ["1080p"],
-    "videoCodecTerms": ["HEVC", "x265"],
-    "videoTerms": ["10bit"],
+    "videoCodecTerms": ["HEVC", "x265", "10bit"],
     "audioTerms": ["Dual-Audio"],
-    "subtitleTerms:": ["Multi-Subs"],
+    "subtitleTerms": ["Multi-Subs"],
     "seasonTerms": ["Season 01"],
     "batchTerms": ["batch"]
   },
@@ -28,12 +27,11 @@ export default [
   //   "titles": ["Cyberpunk: Edgerunners"],
   //   "alias": ["Cyberpunk Edgerunners"],
   //   "resolutionTerms": ["1080p"],
-  //   "videoCodecTerms": ["HEVC"],
-  //   "videoTerms": ["10 bits"],
+  //   "videoCodecTerms": ["HEVC", "10 bits"],
   //   "audioTerms": ["Dual Audio"],
   //   "subtitleTerms:": ["Multi-Subs"],
   //   "seasonTerms": ["Season 1"],
-  //   "batch": ["Season 1", "Batch"],
+  //   "batch": ["Batch"],
   //   "typeTerms": ["WEBRip"]
   // },
   // {
@@ -122,6 +120,19 @@ export default [
   //   "batch": ["S01", "Batch"],
   //   "typeTerms": ["WEB-DL"],
   //   "sourceTerms": ["NF"]
+  // },
+  // {
+  //   "filename": "[Erai-raws] Cyberpunk - Edgerunners - 01 ~ 10 [1080p][Multiple Subtitle] [ENG][POR-BR][SPA-LA][SPA][ARA][FRE][GER][ITA][JPN][POR][POL][DUT][NOB][FIN][TUR][SWE][GRE][HEB][RUM][IND][THA][KOR][DAN][CHI][VIE][UKR][HUN][CES][HRV][MAY][FIL]",
+  //   "groups": ["Erai-raws"],
+  //   "titles": ["Cyberpunk - Edgerunners"],
+  //   "resolutionTerms": ["1080p"],
+  //   "audioLanguageTerms": [
+  //     "ENG", "POR-BR", "SPA-LA", "SPA", "ARA", "FRE", "GER",
+  //     "ITA", "JPN", "POR", "POL", "DUT", "NOB", "FIN", "TUR",
+  //     "SWE", "GRE", "HEB", "RUM", "IND", "THA", "KOR", "DAN",
+  //     "CHI", "VIE", "UKR", "HUN", "CES", "HRV", "MAY", "FIL"
+  //   ],
+  //   "subtitleLanguageTerms": ["Multiple Subtitle"]
   // }
 ].map(({ filename, ...parserResult }) => ({
   filename,
