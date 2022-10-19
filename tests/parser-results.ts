@@ -28,7 +28,6 @@ export default [
     "resolutionTerms": ["1080p"],
     "videoCodecTerms": ["HEVC", "10 bits"],
     "audioTerms": ["Dual Audio"],
-    "subtitleTerms": ["Multi-Subs"],
     "seasonTerms": ["Season 1"],
     "batchTerms": ["Batch"],
     "typeTerms": ["WEBRip"]
