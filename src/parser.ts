@@ -280,18 +280,72 @@ const metadataTokenValue = [
 ] as const
 
 const delimitedMetadataTokenValue = (delimiter: Delimiter) =>
-  (choice as typeof _choice) ([
-    ...metadataTokenValue,
-    whitespace,
-    anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
-  ])
+  // sequenceOf ([
+    // many (whitespace),
+    (choice as typeof _choice) ([
+      ...metadataTokenValue,
+      whitespace,
+      anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
+    ])
+    // lookAhead (many (whitespace)),
+    // lookAhead (many1 ( choice ([whitespace, char (getCorrespondingDelimiter(delimiter))])))
+  // ]).map(token => token[0])
 
 const makeDelimitedMetadataToken = <T extends Delimiter>(delimiter: T) =>
   sequenceOf ([
     char (delimiter) as Parser<Delimiter>,
-    many (delimitedMetadataTokenValue (delimiter)),
+    choice([
+      sequenceOf([
+        (choice as typeof _choice) ([...metadataTokenValue]),
+        many (
+          choice([
+            many1 (
+              sequenceOf([
+                many1 (whitespace),
+                (choice as typeof _choice) ([
+                  ...metadataTokenValue,
+                  anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
+                ]),
+                choice ([
+                  many1 (whitespace),
+                  char (getCorrespondingDelimiter(delimiter))
+                ])
+              ])
+            ),
+            anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
+          ]),
+        ),
+      ]),
+      // sequenceOf([
+      //   (choice as typeof _choice) ([...metadataTokenValue]),
+      //   many (
+      //     choice([
+      //       many1 (
+      //         sequenceOf([
+      //           lookAhead ( many1 (whitespace)),
+      //           (choice as typeof _choice) ([
+      //             ...metadataTokenValue,
+      //             anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
+      //           ]),
+      //           lookAhead (
+      //             choice ([
+      //               many1 (whitespace),
+      //               char (getCorrespondingDelimiter(delimiter))
+      //             ])
+      //           )
+      //         ])
+      //       ),
+      //       anyCharExcept (char (getCorrespondingDelimiter(delimiter)))
+      //     ]),
+      //   ),
+      // ]),
+      // many ((choice as typeof _choice) ([...metadataTokenValue]))
+      // many (delimitedMetadataTokenValue (delimiter)),
+      many (anyCharExcept (char (getCorrespondingDelimiter(delimiter))))
+    ]),
+    // many (delimitedMetadataTokenValue (delimiter)),
     char (getCorrespondingDelimiter(delimiter)) as Parser<CorrespondDelimiter<Delimiter>>
-  ]).map((result) => ({
+  ]).map((result) => console.log(result) || ({
     type: 'METADATA' as const,
     delimiter,
     value: regroupStrings(result).slice(1, -1).flat()
@@ -519,7 +573,9 @@ export default parse
 // const res3 = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
 // console.log(res3)
 
-const res = parse('[DKB] Cyberpunk Edgerunners - Season 01 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][batch]')
+// const res = parse('[DKB] Cyberpunk Edgerunners - Season 01 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][batch]')
+
+const res = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
 console.log(res)
 
 // console.log(format(res))
