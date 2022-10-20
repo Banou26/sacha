@@ -316,13 +316,19 @@ const makeDelimitedMetadataToken = <T extends Delimiter>(delimiter: T) =>
   }))
 
 const nonDelimitedMetadataToken =
-  sequenceOf ([
-    whitespace,
-    (choice as typeof _choice) ([
-      ...metadataTokenValue,
-      ...dataTokenValue
+  choice([
+    sequenceOf ([
+      nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res).flat() })),
+      lookAhead (many (whitespace))
     ]),
-    lookAhead (many (whitespace))
+    sequenceOf ([
+      whitespace,
+      (choice as typeof _choice) ([
+        ...metadataTokenValue,
+        ...dataTokenValue
+      ]),
+      lookAhead (many (whitespace))
+    ])
   ])
     .map((result) => ({
       type: 'METADATA' as const,
@@ -540,7 +546,7 @@ export default parse
 // const res = parse('[DKB] Cyberpunk Edgerunners - Season 01 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][batch]')
 
 // const res = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
-const res = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
+const res = parse('Cyberpunk Edgerunners WEB-DL 1080P HDR DV EAC3 VF VOSTFR-LTPD v2')
 console.log(res)
 
 // console.log(format(res))
