@@ -256,7 +256,7 @@ const nonDelimitedGroupToken = sequenceOf([
 
 const dataTokenValue = [
   episodeToken.map(res => ({ type: 'episodeTerms' as const, value: res })),
-  nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res).flat() }))
+  nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res.slice(1)).flat() }))
 ]
 
 const metadataTokenValue = [
@@ -318,7 +318,7 @@ const makeDelimitedMetadataToken = <T extends Delimiter>(delimiter: T) =>
 const nonDelimitedMetadataToken =
   choice([
     sequenceOf ([
-      nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res).flat() })),
+      nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res.slice(1)).flat() })),
       lookAhead (many (whitespace))
     ]),
     sequenceOf ([
