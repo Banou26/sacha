@@ -233,14 +233,14 @@ const seasonPartToken = choice(
 ) as Parser<typeof SEASON_PART_TERMS[number]>
 
 const episodeToken = sequenceOf([
-  many1(digit),
+  many1(digit).map(res => res.join('')),
   many (whitespace),
   choice ([
     char('~'),
     char('-')
   ]),
   many (whitespace),
-  many1(digit)
+  many1(digit).map(res => res.join(''))
 ])
 
 const seasonTermToken = sequenceOf([
@@ -507,6 +507,7 @@ export const parse = (str: string) => {
 
   return {
     titles: result.titles?.map(flatMergeStringGroups),
+    episodeTerms: result.episodeTerms?.map(flatMergeStringGroups),
     videoCodecTerms: result.videoCodecTerms?.map(flatMergeStringGroups),
     audioCodecTerms: result.audioCodecTerms?.map(flatMergeStringGroups),
     audioLanguageTerms: result.audioLanguageTerms?.map(flatMergeStringGroups),

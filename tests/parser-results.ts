@@ -113,6 +113,7 @@ export default [
     "filename": "[Erai-raws] Cyberpunk - Edgerunners - 01 ~ 10 [1080p][Multiple Subtitle] [ENG][POR-BR][SPA-LA][SPA][ARA][FRE][GER][ITA][JPN][POR][POL][DUT][NOB][FIN][TUR][SWE][GRE][HEB][RUM][IND][THA][KOR][DAN][CHI][VIE][UKR][HUN][CES][HRV][MAY][FIL]",
     "groups": ["Erai-raws"],
     "titles": ["Cyberpunk - Edgerunners"],
+    "episodeTerms": ["01 ~ 10"],
     "resolutionTerms": ["1080p"],
     "audioLanguageTerms": [
       "ENG", "POR-BR", "SPA-LA", "SPA", "ARA", "FRE", "GER",
