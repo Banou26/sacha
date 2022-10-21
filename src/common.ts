@@ -170,6 +170,9 @@ export const NORMALIZED_LANGUAGES = {
   RUS: LanguageTag.RU
 } as const
 
+export const AUDIO_LANGUAGE_TERMS_CASE_SENSITIVE = sortTermLength(['MULTi'] as const)
+export const AUDIO_LANGUAGE_TERMS = sortTermLength(['Optional Dual Audio', 'Dual Audio'] as const)
+
 export const NORMALIZED_SUBTITLE_LANGUAGES = {
   'VOSTFR': LanguageTag.FR,
 } as const

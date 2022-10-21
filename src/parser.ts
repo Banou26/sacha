@@ -9,7 +9,9 @@ import {
   SUBTITLE_TERMS, NORMALIZED_SUBTITLE_LANGUAGES,
   SOURCE_TERMS, SEASON_TERMS, BATCH_TERMS,
   normalizeVideoCodec,
-  SEASON_PART_TERMS
+  SEASON_PART_TERMS,
+  AUDIO_LANGUAGE_TERMS,
+  AUDIO_LANGUAGE_TERMS_CASE_SENSITIVE
 } from './common'
 import { istr, ichar } from './utils'
 
@@ -153,10 +155,19 @@ const audioTermToken =
 
 const audioLanguageTermsToken =
   choice (
-    Object
-      .keys(NORMALIZED_LANGUAGES)
-      .map(istr)
-  ) as Parser<keyof typeof NORMALIZED_LANGUAGES>
+    [
+      ...Object
+        .keys(NORMALIZED_LANGUAGES)
+        .map(istr)
+      ,
+      ...AUDIO_LANGUAGE_TERMS.map(istr),
+      ...AUDIO_LANGUAGE_TERMS_CASE_SENSITIVE.map(str)
+    ]
+  ) as Parser<
+    keyof typeof NORMALIZED_LANGUAGES
+    | typeof AUDIO_LANGUAGE_TERMS[number]
+    | typeof AUDIO_LANGUAGE_TERMS_CASE_SENSITIVE[number]
+  >
 
 const subtitleLanguageTermsToken =
   choice (
@@ -222,14 +233,14 @@ const seasonPartToken = choice(
 ) as Parser<typeof SEASON_PART_TERMS[number]>
 
 const episodeToken = sequenceOf([
-  digit,
+  many1(digit),
   many (whitespace),
   choice ([
     char('~'),
     char('-')
   ]),
   many (whitespace),
-  digit
+  many1(digit)
 ])
 
 const seasonTermToken = sequenceOf([
@@ -255,8 +266,13 @@ const nonDelimitedGroupToken = sequenceOf([
 ])
 
 const dataTokenValue = [
+  nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res.slice(1)).flat() })),
   episodeToken.map(res => ({ type: 'episodeTerms' as const, value: res })),
-  nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res.slice(1)).flat() }))
+]
+
+const nonSeparatedTokenValue = [
+  nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res.slice(1)).flat() })),
+  versionToken.map(res => ({ type: 'versionTerms' as const, value: res }))
 ]
 
 const metadataTokenValue = [
@@ -325,9 +341,14 @@ const nonDelimitedMetadataToken =
       whitespace,
       (choice as typeof _choice) ([
         ...metadataTokenValue,
-        ...dataTokenValue
+        ...dataTokenValue,
       ]),
       lookAhead (many (whitespace))
+    ]),
+    sequenceOf ([
+      (choice as typeof _choice) ([
+        ...nonSeparatedTokenValue
+      ])
     ])
   ])
     .map((result) => ({
@@ -342,7 +363,7 @@ const metadataToken =
   choice (
     [
       ...delimitersArray.map(makeDelimitedMetadataToken),
-      nonDelimitedMetadataToken
+      nonDelimitedMetadataToken,
     ]
   )  as Parser<
     ExtractParserResult<ReturnType<typeof makeDelimitedMetadataToken>>
@@ -546,8 +567,8 @@ export default parse
 // const res = parse('[DKB] Cyberpunk Edgerunners - Season 01 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][batch]')
 
 // const res = parse('[EMBER] Cyberpunk: Edgerunners (2022) (Season 1) [WEBRip] [1080p Dual Audio HEVC 10 bits] (Cyberpunk Edgerunners) (Batch)')
-const res = parse('Cyberpunk Edgerunners WEB-DL 1080P HDR DV EAC3 VF VOSTFR-LTPD v2')
-console.log(res)
+// const res = parse('[Erai-raws] Cyberpunk - Edgerunners - 01 ~ 10 [1080p]')
+// console.log(res)
 
 // console.log(format(res))
 // console.log(format(res2))
