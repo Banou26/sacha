@@ -3,12 +3,6 @@
 
 Sacha is a media string parser and more, for filenames, torrent names, or any sort of strings that represent a media name/metadata through a string and formats everything neatly for you.
 
-
-
-## Anime relations
-This library make use of Taiga's https://github.com/erengy/anime-relations list
-to try and infer as accurate episode number as possible.
-
 ## Examples:
 
 Sacha can parse all sorts of formats:

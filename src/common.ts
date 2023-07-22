@@ -4,7 +4,7 @@ import * as A from 'fp-ts/lib/ReadonlyArray'
 import * as REA from 'fp-ts/lib/ReadonlyNonEmptyArray'
 import * as RR from 'fp-ts/lib/ReadonlyRecord'
 import * as O from 'fp-ts/lib/Option'
-import { LanguageTag } from '../../scannarr/src/utils/language'
+import { LanguageTag } from './utils/language'
 
 // needed as small tokens might override more specific tokens
 const sortTermLength = <T extends readonly string[]>(terms: T) =>

@@ -6,7 +6,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "noImplicitAny": true,
-    "outDir": "./lib",
+    "outDir": "./build",
     "sourceMap": true,
     "declaration": true,
     "emitDeclarationOnly": true,
@@ -15,5 +15,8 @@
     "strict": true,
     "strictNullChecks": true,
     "noUncheckedIndexedAccess": true,
-  }
+    "baseUrl": "./",
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
 }
