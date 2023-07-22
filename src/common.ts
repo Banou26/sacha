@@ -123,6 +123,7 @@ export const AUDIO_TERMS = sortTermLength([
 export const CONTAINER_TERMS = sortTermLength([
   '3GP', 'ADTS', 'FLAC', 'MPEG',
   'MPEG-2', 'MP4', 'Ogg', 'MOV',
+  'MKV'
    // 'MPEG-4' (MP4)
   // 'QuickTime' (MOV)
 ] as const)

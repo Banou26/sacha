@@ -11,7 +11,9 @@ import {
   normalizeVideoCodec,
   SEASON_PART_TERMS,
   AUDIO_LANGUAGE_TERMS,
-  AUDIO_LANGUAGE_TERMS_CASE_SENSITIVE
+  AUDIO_LANGUAGE_TERMS_CASE_SENSITIVE,
+  VIDEO_FORMAT_TERMS,
+  CONTAINER_TERMS
 } from './common'
 import { istr, ichar } from './utils'
 
@@ -128,6 +130,12 @@ const videoCodecToken =
     VIDEO_CODECS
       .map(istr)
   ) as Parser<typeof VIDEO_CODECS[number]>
+
+const containerTermToken =
+  choice (
+    CONTAINER_TERMS
+      .map(istr)
+  ) as Parser<typeof CONTAINER_TERMS[number]>
 
 const videoTermToken =
   choice (
@@ -272,7 +280,8 @@ const dataTokenValue = [
 
 const nonSeparatedTokenValue = [
   nonDelimitedGroupToken.map(res => ({ type: 'groups' as const, value: regroupStrings(res.slice(1)).flat() })),
-  versionToken.map(res => ({ type: 'versionTerms' as const, value: res }))
+  versionToken.map(res => ({ type: 'versionTerms' as const, value: res })),
+  containerTermToken.map(res => ({ type: 'containerTerms' as const, value: res })),
 ]
 
 const metadataTokenValue = [
@@ -280,6 +289,7 @@ const metadataTokenValue = [
   typeTermToken.map(res => ({ type: 'typeTerms' as const, value: res })),
   audioCodecToken.map(res => ({ type: 'audioCodecTerms' as const, value: res })),
   audioTermToken.map(res => ({ type: 'audioTerms' as const, value: res })),
+  containerTermToken.map(res => ({ type: 'containerTerms' as const, value: res })),
   videoCodecToken.map(res => ({ type: 'videoCodecTerms' as const, value: res })),
   videoTermToken.map(res => ({ type: 'videoTerms' as const, value: res })),
   resolutionToken.map(res => ({ type: 'resolutionTerms' as const, value: res })),
@@ -508,6 +518,7 @@ export const parse = (str: string) => {
   return {
     titles: result.titles?.map(flatMergeStringGroups),
     episodeTerms: result.episodeTerms?.map(flatMergeStringGroups),
+    containerTerms: result.containerTerms?.map(flatMergeStringGroups),
     videoCodecTerms: result.videoCodecTerms?.map(flatMergeStringGroups),
     audioCodecTerms: result.audioCodecTerms?.map(flatMergeStringGroups),
     audioLanguageTerms: result.audioLanguageTerms?.map(flatMergeStringGroups),
