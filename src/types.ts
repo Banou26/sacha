@@ -1,5 +1,5 @@
-import type { LanguageTag } from '../../scannarr/src/utils/language'
-import { AUDIO_CODECS, RESOLUTIONS, VIDEO_CODECS, CONTAINERS, NORMALIZED_LANGUAGES } from './common'
+import type { LanguageTag } from './utils/language'
+import { AUDIO_CODECS, RESOLUTIONS, VIDEO_CODECS, NORMALIZED_LANGUAGES } from './common'
 
 // https://en.wikipedia.org/wiki/List_of_hash_functions
 // https://cryptography.fandom.com/wiki/List_of_hash_functions
@@ -23,8 +23,6 @@ export type COMMON_AUDIO_CODEC = typeof AUDIO_CODECS[number]
 export type AUDIO_CODEC = (string & {}) & COMMON_AUDIO_CODEC
 
 
-export type CONTAINER = typeof CONTAINERS[number]
-
 export type LANGUAGE_SHORTHAND = (string & {}) & keyof typeof NORMALIZED_LANGUAGES
 
 export type MediaBase = {
@@ -37,7 +35,6 @@ export type MediaBase = {
   resolution?: Resolution
   videoCodec?: VIDEO_CODEC
   audioCodec?: AUDIO_CODEC
-  containerFormat?: CONTAINER
 } & (
   {
     language: LanguageTag

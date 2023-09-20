@@ -1,18 +1,17 @@
 import {
   str, sequenceOf, choice, char, many, many1,
   everyCharUntil, endOfInput, anyCharExcept,
-  whitespace, digit, Ok, Parser, everythingUntil, between, lookAhead, 
+  whitespace, digit, Ok, Parser, lookAhead, 
 } from 'arcsecond'
 import {
   AUDIO_CODECS, AUDIO_TERMS, RESOLUTIONS, VIDEO_CODECS,
   NORMALIZED_LANGUAGES, VIDEO_TERMS, TYPE_TERMS,
   SUBTITLE_TERMS, NORMALIZED_SUBTITLE_LANGUAGES,
-  SOURCE_TERMS, SEASON_TERMS, BATCH_TERMS,
+  SOURCE_TERMS, BATCH_TERMS,
   normalizeVideoCodec,
   SEASON_PART_TERMS,
   AUDIO_LANGUAGE_TERMS,
   AUDIO_LANGUAGE_TERMS_CASE_SENSITIVE,
-  VIDEO_FORMAT_TERMS,
   CONTAINER_TERMS
 } from './common'
 import { istr, ichar } from './utils'
@@ -547,14 +546,21 @@ export const parse = (str: string) => {
 }
 
 export const format = <T extends ReturnType<typeof parse>>(result: T) => {
+  // @ts-ignore
   const group = result.group
   const resolution =
+    // @ts-ignore
     Array.isArray(result.resolution)
+      // @ts-ignore
       ? result.resolution.map(Number) as Resolution[]
+      // @ts-ignore
       : Number(result.resolution) as Resolution
 
+  // @ts-ignore
   const languages = result.language?.map(lang => NORMALIZED_LANGUAGES[lang])
+  // @ts-ignore
   const videoCodecs = result.videoCodec?.map(normalizeVideoCodec)
+  // @ts-ignore
   const audioCodecs = result.audioCodec?.map(codec => AUDIO_CODECS[codec])
 
   return {

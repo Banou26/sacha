@@ -16,7 +16,8 @@
     "strictNullChecks": true,
     "noUncheckedIndexedAccess": true,
     "baseUrl": "./",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }
