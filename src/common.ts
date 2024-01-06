@@ -1,9 +1,3 @@
-import { pipe } from 'fp-ts/lib/function'
-import { toUndefined } from 'fp-ts/lib/Option'
-import * as A from 'fp-ts/lib/ReadonlyArray'
-import * as REA from 'fp-ts/lib/ReadonlyNonEmptyArray'
-import * as RR from 'fp-ts/lib/ReadonlyRecord'
-import * as O from 'fp-ts/lib/Option'
 import { LanguageTag } from './utils/language'
 
 // needed as small tokens might override more specific tokens
@@ -79,13 +73,11 @@ type VideoCodec = typeof NORMALIZED_VIDEO_CODECS[keyof typeof NORMALIZED_VIDEO_C
 //   ) as { [Key in VideoCodec]: keyof typeof NORMALIZED_VIDEO_CODECS }
 
 export const normalizeVideoCodec = <T extends VideoCodec>(videoCodec: T) =>
-    pipe(
-      NORMALIZED_VIDEO_CODECS,
-      RR.toEntries,
-      A.findFirst(([normalizedName, variants]) => variants.some(variant => variant === videoCodec)),
-      O.map(([normalizedName]) => normalizedName),
-      toUndefined
-    )
+  Object
+    .entries(NORMALIZED_VIDEO_CODECS)
+    .flatMap(([normalized, variant]) => variant.map((codec => [codec, normalized])))
+    .find(([variant]) => variant === videoCodec)
+    ?.[1]
 
 const NORMALIZED_COLOR_DEPTH = {
   '8BIT': makeColorDepth(8),

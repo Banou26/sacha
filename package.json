@@ -1,6 +1,6 @@
 {
   "name": "sacha",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "build/index.mjs",
   "module": "build/index.mjs",
   "scripts": {
@@ -12,9 +12,7 @@
   },
   "author": "Banou26",
   "dependencies": {
-    "anitomyscript": "^2.0.4",
-    "arcsecond": "^5.0.0",
-    "fp-ts": "^2.12.3"
+    "arcsecond": "^5.0.0"
   },
   "devDependencies": {
     "@japa/expect": "^2.0.1",

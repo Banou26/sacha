@@ -16,11 +16,6 @@ import {
 } from './common'
 import { istr, ichar } from './utils'
 
-import { groupBy } from 'fp-ts/lib/NonEmptyArray'
-import { flatten, map } from 'fp-ts/lib/Array'
-import { fromEntries, toEntries } from 'fp-ts/lib/Record'
-import { filter } from 'fp-ts/lib/Array'
-import { pipe } from 'fp-ts/lib/function'
 import { Resolution } from './types'
 
 declare function _choice<A>([p1]: [Parser<A>]): Parser<A>;
@@ -428,74 +423,63 @@ const parser =
       const tokens = [firstToken, ...restTokens]
 
       const dataTokens =
-        pipe(
-          tokens,
-          filter((token): token is typeof token & { type: 'DATA' } =>
+        tokens
+          .filter((token): token is Extract<typeof token, { type: 'DATA' }> =>
             Boolean(
               token
               && 'type' in token
               && token.type === 'DATA'
             )
-          ),
-          filter(token =>
+          )
+          .filter(token =>
             typeof token.value === 'string'
               ? !!token.value.trim().length
               : true
-          ),
-          filter(token => token.value.replaceAll(nonWordStrings, '').length >= 1),
-          map(token => ({
+          )
+          .filter(token => token.value.replaceAll(nonWordStrings, '').length >= 1)
+          .map(token => ({
             type: 'titles',
             value:
               typeof token.value === 'string'
                 ? trimNonWordStrings.exec(token.value.trim())?.[1] ?? token.value.trim()
                 : token.value
           }) as const)
-        )
 
       const metadataTokens =
-        pipe(
-          tokens,
-          filter((token): token is Extract<typeof token, { type: 'METADATA' }> =>
+        tokens
+          .filter((token): token is Extract<typeof token, { type: 'METADATA' }> =>
             Boolean(
               token
               && 'type' in token
               && token.type === 'METADATA'
             )
-          ),
-          filter(token => token.value.length >= 1)
-        )
+          )
+          .filter(token => token.value.length >= 1)
 
-      // console.log('metadataTokens', ...metadataTokens)
+      const parsedMetadata =
+        metadataTokens
+          .map(token => token?.value)
+          .filter((token): token is typeof token & { type: string } => Boolean(token))
+          .flat()
+          .filter(value =>
+            Boolean(
+              value
+              && typeof value === 'object'
+              && !Array.isArray(value)
+            ),
+          )
+          .filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object')
 
-      const parsedMetadata = pipe(
-        metadataTokens,
-        map((token) => token?.value),
-        filter((token): token is typeof token & { value: any } => Boolean(token)),
-        // todo: try to remove this ts-ignore
-        // @ts-ignore
-        flatten,
-        filter(value =>
-          Boolean(
-            value
-            && typeof value === 'object'
-            && !Array.isArray(value)
-          ),
-        ),
-        filter((token): token is Extract<typeof token, { type: string }> => typeof token === 'object')
-      )
-
-      // console.log('parsedMetadata', ...parsedMetadata)
-
-      // todo: could try to remove that as unknown by making a properly typed groupBy or smth: https://github.com/gcanti/fp-ts/issues/797#issuecomment-477969998 ?
-      const groupedResults = pipe(
-        [...parsedMetadata, ...dataTokens],
-        groupBy((token) => token.type),
-        toEntries,
-        map(([key, val]) => [key, val.map(token => token.value)]),
-        // todo: try to remove this ts-ignore
-        // @ts-ignore
-        fromEntries
-      ) as unknown as GroupBy<typeof parsedMetadata | typeof dataTokens>
+      const groupedResults =
+        [...parsedMetadata, ...dataTokens]
+          .reduce((acc, token) => {
+            const { type, value } = token
+            const existing = acc[type] ?? []
+            return {
+              ...acc,
+              [type]: [...existing, value]
+            }
+          }, {} as Record<string, any>)
 
       // console.log('groupedResults', groupedResults)
 
@@ -531,13 +515,13 @@ export const parse = (str: string) => {
     videoTerms: result.videoTerms?.map(flatMergeStringGroups),
     seasonTerms: result.seasonTerms?.map(flatMergeStringGroups),
     sourceTerms: result.sourceTerms?.map(flatMergeStringGroups),
-    dates: result.dates?.map(dateGroup =>
+    dates: result.dates?.map((dateGroup: any) =>
       Array.isArray(dateGroup)
         ? dateGroup.join('')
         : dateGroup
     ),
     resolutionTerms:
-      result.resolutionTerms?.map(resolutionTermGroup =>
+      result.resolutionTerms?.map((resolutionTermGroup: any) =>
         Array.isArray(resolutionTermGroup)
           ? resolutionTermGroup.join('')
           : resolutionTermGroup
